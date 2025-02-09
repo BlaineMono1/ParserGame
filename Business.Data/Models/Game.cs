@@ -8,7 +8,7 @@ namespace Business.Data.Models
     public class Game:BaseEntity
     {
         #region поля
-        /// <summary>
+        /// <summary>   
         /// Id игры с PsStore
         /// </summary>
         public string ConceptId { get; set; }
@@ -17,10 +17,7 @@ namespace Business.Data.Models
         /// </summary>
         public string Name { get; set; }
 
-        /// <summary>
-        /// Жанр игры 
-        /// </summary>
-        public string Geners { get; set; }
+ 
         
         /// <summary>
         /// Язык игры
@@ -40,7 +37,7 @@ namespace Business.Data.Models
         /// <summary>
         /// Издания
         /// </summary>
-        public List<Edition> Editions { get; set; }
+        public List<Edition>? Editions { get; set; }
         /// <summary>
         /// AddOns
         /// </summary>

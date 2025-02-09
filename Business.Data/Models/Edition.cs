@@ -10,15 +10,24 @@ namespace Business.Data.Models
         /// Куса код игры 
         /// </summary>
         public string CusaCode {  get; set; }
+
+
         /// <summary>
         /// Тип объекта(Игра)
         /// </summary>
         public string Type {  get; set; }
-
+        /// <summary>
+        /// тип издания стандарт и тд.
+        /// </summary>
+        public string EditionType { get; set; }
         /// <summary>
         /// Наименование издания 
         /// </summary>
         public string EditionName { get; set; }
+        /// <summary>
+        /// Жанр игры 
+        /// </summary>
+        public string Geners { get; set; }
         /// <summary>
         /// Url изображения
         /// </summary>
@@ -26,7 +35,7 @@ namespace Business.Data.Models
         /// <summary>
         /// Платформа игры (0 - ps4, 1- ps5, 2- ps4/ps5)
         /// </summary>
-        public int Platform { get; set; }
+        public  string Platform { get; set; }
         /// <summary>
         /// Входит в подписку 
         /// </summary>
@@ -34,7 +43,7 @@ namespace Business.Data.Models
         /// <summary>
         /// Что входит в издание
         /// </summary>
-        public string Features { get; set; }
+        public string? Features { get; set; }
         /// <summary>
         /// Кол-во оценок 
         /// </summary>
@@ -43,6 +52,10 @@ namespace Business.Data.Models
         /// Рейтинг игры 
         /// </summary>
         public float Rating { get; set; }
+
+        public string CodeRegion { get; set; }
+
+        public string OrderType { get; set; }
 
         #endregion
 

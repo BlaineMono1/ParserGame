@@ -9,6 +9,7 @@ using ParserService.Models.GameModel;
 using ParserService.Parsers;
 using ParserService.Service;
 using ParserService.Utils;
+using static ParserService.Models.GameModel.ModelGame;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +31,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 
 // Регистрация парсеров
 builder.Services.AddSingleton<IParser<ConceptDto>, ConceptParser>();
-builder.Services.AddSingleton<IParser<ConceptRetrieveResponse>, GameParser>();
+builder.Services.AddSingleton<IParser<DataGame>, GameParser>();
 
 
 // Регистрация сервиса для генерации URL
@@ -43,7 +44,7 @@ builder.Services.AddSingleton<ParserAdapter>(provider =>
     var parsers = new Dictionary<string, dynamic>
         {
             { "concept", provider.GetService<IParser<ConceptDto>>() },
-            { "cusacode", provider.GetService<IParser<ConceptRetrieveResponse>>() }
+            { "cusacode", provider.GetService<IParser<DataGame>>() }
         };
 
 

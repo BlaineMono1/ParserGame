@@ -4,13 +4,16 @@ namespace ParserService.Utils.Helper
 {
     public static class ProxyHelper
     {
-        private static readonly List<ProxyModel> Proxies = new List<ProxyModel>
+
+
+       
+        public  static readonly List<ProxyModel> Proxies = new List<ProxyModel>
        {
             new ProxyModel
             {
-                Url = "http://ui5jpeyern-mobile.res-country-TR-state-745042-city-745044-hold-session-session-679e7f8c54aaf:mRvujB1Cc3DS2lGs@93.190.142.210:9999",
-                Login = "ui5jpeyern-mobile.res-country-TR-state-745042-city-745044-hold-session-session-679e7f8c54aaf",
-                Password = "mRvujB1Cc3DS2lGs"
+                Url = "http://45.149.131.230:62226",
+                Login = "zkVDTubV",
+                Password = "uz4CEPrJ"
             },
             new ProxyModel
             {

@@ -1,19 +1,25 @@
 ﻿using System.Text.Json;
+using Business.Data.Models;
+using DataBaseToAccess;
 using Microsoft.AspNetCore.Mvc;
 using ParserGame.Settings;
 using ParserService.Models;
 using ParserService.Models.GameModel;
 using ParserService.Service;
 using ParserService.Utils;
+using ParserService.Utils.Helper;
+using static ParserService.Models.GameModel.ModelGame;
 
 namespace ParserGame.Controllers
 {
     public class ParserController : Controller
     {
         private readonly ParserAdapter _adapter;
-        public ParserController(ParserAdapter adapter)
+        public readonly BaseDbContext _context;
+        public ParserController(ParserAdapter adapter, BaseDbContext context)
         {
             _adapter = adapter;
+            _context = context;
         }
 
         [HttpGet("concept/{startPage}/{endPage}")]
@@ -25,7 +31,7 @@ namespace ParserGame.Controllers
                 var urls = urlService.GenerateUrls(startPage, endPage);
 
                 var products = await _adapter.ParseMultiplePagesAsync<ConceptDto>("concept", urls);
-
+           
                 Logger.Log("Stream file");
                 // Генерируем имя файла
                 var fileName = "concept.json";
@@ -52,6 +58,9 @@ namespace ParserGame.Controllers
             }
         }
 
+
+
+
         [HttpGet("cusacode")]
         public async Task<IActionResult> ParseEntityFull()
         {
@@ -67,29 +76,22 @@ namespace ParserGame.Controllers
                 List<string> list = conceptList.Select(c=>c.Id).ToList();
                 if (conceptList != null)
                 {
+                    //Генерация для UA
                     var requestService = new UrlGeneratorService(BaseUrl.RequestJson);
                     var requestList = requestService.GenerateRequests(list);
-                    var products = await _adapter.ParseMultipleJsonAsync<ConceptRetrieveResponse>("cusacode", requestList);
-                    Logger.Log("Stream file");
-                    // Генерируем имя файла
                     var fileName = "cusacode.json";
                     var filePathWrite = Path.Combine(Directory.GetCurrentDirectory(), "Output", fileName);
-                    // Создаем директорию, если она не существует
-                    var outputDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Output");
-                    if (!Directory.Exists(outputDirectory))
-                    {
-                        Directory.CreateDirectory(outputDirectory);
-                    }
+                    var proxy = ProxyHelper.Proxies[0];
+                    HttpClient httpClient = HttpClientFactory.CreateClientUa(proxy);
+                    HttpClient httpClientTr = HttpClientFactory.CreateClientTr(proxy);
+                    await _adapter.ParseMultipleJsonAsync<DataGame>("cusacode", requestList, filePathWrite,httpClient, httpClientTr);
 
-                    // Записываем данные в файл в формате JSON
-                    var jsonfile = JsonSerializer.Serialize(products, new JsonSerializerOptions { WriteIndented = true });
-                    await System.IO.File.WriteAllTextAsync(filePathWrite, jsonfile);
 
-                    Logger.Log("Stream OK");
 
-                    return Ok(new { Message = "Data parsed and saved successfully.", FileName = fileName });
 
                 }
+
+                return Ok(new { Message = "Data parsed and saved successfully." });
             }
             catch(Exception ex)
             {

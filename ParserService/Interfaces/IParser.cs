@@ -5,7 +5,7 @@ namespace ParserService.Interfaces
     {
         Task<IEnumerable<T>> ParseAsync(string url, HttpClient httpClient);
 
-        Task<T> ParseAsyncJson(string url, string conceptId, HttpClient httpClient);
+        Task<T> ParseAsyncJson(string url, string conceptId, HttpClient httpClient, HttpClient httpClientTr);
 
 
     }

@@ -76,7 +76,8 @@ namespace ParserService.Parsers
            
         }
 
-        public Task<ConceptDto> ParseAsyncJson(string url,string conceptId, HttpClient httpClient)
+
+        public Task<ConceptDto> ParseAsyncJson(string url, string conceptId, HttpClient httpClient, HttpClient httpClientTr)
         {
             throw new NotImplementedException();
         }
