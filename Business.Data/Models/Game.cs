@@ -5,7 +5,7 @@ namespace Business.Data.Models
     /// <summary>
     /// Игры концепция 
     /// </summary>
-    public class Game:BaseEntity
+    public class Game
     {
         #region поля
         /// <summary>   
@@ -22,15 +22,14 @@ namespace Business.Data.Models
         /// <summary>
         /// Язык игры
         /// </summary>
-        public string Languages {  get; set; }
-        /// <summary>
-        /// Релиз игры
-        /// </summary>
-        public DateTime? Release {  get; set; }
+        public string LanguagesVoice {  get; set; }
+        public string LanguagesInterface { get; set; }
+       
         /// <summary>
         /// В каком регионе игра есть (0-украина, 1- турция, 2 - украина/турция) To Do: Сделать Enum
         /// </summary>
-        public int Region {  get; set; }
+
+        public  int StarCount {  get; set; }
         #endregion
 
         #region связи
@@ -41,7 +40,7 @@ namespace Business.Data.Models
         /// <summary>
         /// AddOns
         /// </summary>
-        public List<AddOn> AddOns { get; set; }
+        //public List<AddOn> AddOns { get; set; }
         #endregion
 
 

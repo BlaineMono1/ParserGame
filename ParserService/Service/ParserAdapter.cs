@@ -14,6 +14,10 @@ using Polly;
 using Business.Data.Models;
 using ParserService.Utils.Helper;
 using Product = Business.Data.Models.Product;
+using System.Linq;
+using System.Text.Json;
+using System.Runtime.Serialization;
+using ParserService.Parsers;
 namespace ParserService.Service
 {
     public class ParserAdapter
@@ -34,18 +38,17 @@ namespace ParserService.Service
         /// <param name="url"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public async Task<IEnumerable<T>> ParseAsync<T>(string parserKey, string url) where T:class
+        public async Task<IEnumerable<T>> ParseAsync<T>(string parserKey, string url,HttpClient httpClient) where T:class
         {
 
             if (_parsers.ContainsKey(parserKey))
             {
-                //HttpClient httpClient = HttpClientFactory.CreateClientUa();
-               
-                //var parser = _parsers[parserKey] as IParser<T>;
-                //if (parser != null)
-                //{
-                //    return await parser.ParseAsync(url, httpClient);
-                //}
+
+                var parser = _parsers[parserKey] as IParser<T>;
+                if (parser != null)
+                {
+                    return await parser.ParseAsync(url, httpClient);
+                }
             }
 
             throw new KeyNotFoundException($"Parser with key '{parserKey}' not found.");
@@ -54,7 +57,7 @@ namespace ParserService.Service
         /// <summary>
         /// Парсит данные с нескольких страниц.
         /// </summary>
-        public async Task<IEnumerable<T>> ParseMultiplePagesAsync<T>(string parserKey, IEnumerable<string>urls) where T : class
+        public async Task<IEnumerable<T>> ParseMultiplePagesAsync<T>(string parserKey, IEnumerable<string>urls, HttpClient httpClient) where T : class
         {
             
             var results = new ConcurrentBag<T>();
@@ -78,7 +81,7 @@ namespace ParserService.Service
 
                 try
                 {
-                    var pageResults = await ParseAsync<T>(parserKey, url);
+                    var pageResults = await ParseAsync<T>(parserKey, url,httpClient);
                     if (pageResults != null)
                     {
                         foreach (var pageResult in pageResults)
@@ -155,9 +158,9 @@ namespace ParserService.Service
         /// Парсит данные с нескольких страниц.
         /// </summary>
         public async Task ParseMultipleJsonAsync<T>(string parserKey,Dictionary<string,string> urls, 
-            string outputPath, HttpClient httpClient, HttpClient httpClientTr, int batchSize = 100) where T : class
+            string outputPath, HttpClient httpClient, HttpClient httpClientTr, int batchSize = 10) where T : class
         {
-
+            int a = 0;
                 var retryPolicy = Policy
             .Handle<HttpRequestException>()
             .Or<TaskCanceledException>()
@@ -172,9 +175,10 @@ namespace ParserService.Service
             // Задача для фоновой записи
             var writeTask = Task.Run(async () =>
             {
-                while (!dataBuffer.IsCompleted)
+                var batch = new List<DataGame>();
+
+                while (!dataBuffer.IsCompleted || batch.Count > 0)
                 {
-                    var batch = new List<DataGame>();
                     while (batch.Count < batchSize && !dataBuffer.IsCompleted)
                     {
                         try
@@ -190,8 +194,9 @@ namespace ParserService.Service
                         try
                         {
                             await AppendToJsonFile(outputPath, batch);
-                            batchCounter += batch.Count;
+                                batchCounter += batch.Count;
                             Logger.Log($"Written {batchCounter} items total");
+                            batch.Clear();
                         }
                         finally
                         {
@@ -200,6 +205,7 @@ namespace ParserService.Service
                     }
                 }
             });
+            var tasks = new List<Task>();
             await Parallel.ForEachAsync(urls, new ParallelOptions
             {
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
@@ -208,7 +214,7 @@ namespace ParserService.Service
             {
                 if (processedUrls.TryAdd(url.Key, 0))
                 {
-                    var randomDelay = TimeSpan.FromMilliseconds(new Random().Next(500, 2000));
+                    //var randomDelay = TimeSpan.FromMilliseconds(new Random().Next(500, 2000));
                    
                     await retryPolicy.ExecuteAsync(async () =>
                     {
@@ -222,8 +228,8 @@ namespace ParserService.Service
                           parserKey,
                           url.Value,
                           url.Key, httpClient, httpClientTr);
-                            await Task.Delay(randomDelay);
-                            if (result != null)
+                            //await Task.Delay(randomDelay);
+                            if (result.dataUa.data != null)
                             {
                                 dataBuffer.Add(result);
                             }
@@ -235,13 +241,15 @@ namespace ParserService.Service
                         }
 
                     });
+
                 }
                 else
                 {
                     Logger.Log($"Duplicate URL detected: {url.Key}");
                 }
             });
-
+           
+            dataBuffer.CompleteAdding();
             await writeTask;
 
             Logger.Log("All data processed and written");
@@ -286,117 +294,164 @@ namespace ParserService.Service
                     var conceptId = p.dataUa.data.conceptRetrieve.id ?? string.Empty;
                     var name = p.dataUa.data.conceptRetrieve.name ?? string.Empty;
                     var editions = new List<Business.Data.Models.Edition>();
+                    var voice = p.Voice ?? string.Empty;
+                    var lang = p.SubtitlesLanguages ?? string.Empty;
+                    int starCount = default;
+                    if(p.dataStar != null && p.dataStar.data.conceptRetrieve.defaultProduct !=null)
+                    {
+                        if (p.dataStar.data.conceptRetrieve.defaultProduct.starRating.totalRatingsCount != null)
+                            starCount = p.dataStar.data.conceptRetrieve.defaultProduct.starRating.totalRatingsCount;
 
+                    }
+
+                    //var addOns = new List<AddOn>();
+                    //foreach(var item in p.addonList)
+                    //{
+                    //    if(item.Price != null && item.Price !="Бесплатно" && item.Price != "Недоступно")
+                    //    {
+                    //        addOns.Add(new AddOn()
+                    //        {
+                    //            Name = item.Name,
+                    //            CusaCodeUa = item.CusaCode,
+                    //            CusaCodeTr = item.CusaCode,
+                    //            Type = item.Type,
+                    //            Image = item.Image,
+
+                    //        });
+                    //    }
+                       
+                    //}
 
                     foreach (var p1 in p.dataUa.data.conceptRetrieve.products)
                     {
-                        var webcast = p1.webctas.FirstOrDefault();
+                        var webcast = p1.webctas;
+
                         var webcastTr = p.dataTr.data.conceptRetrieve.products.Where(p => p.id == p1.id).Select(p => p.webctas.FirstOrDefault()).FirstOrDefault();
                         // Проверка на null для webctas и edition
-                        if (webcast == null)
+                        if (webcast.FirstOrDefault() == null)
                             continue;
-                        if (webcastTr == null)
-                            continue;
+                        
 
+                            bool hasValidWebcta = false;
+                            // Проверка на null для price
+                          
+                            if (webcast[0].price != null && webcast[0].price.isFree != true && webcast[0].price.basePrice != null)
+                            {
+                                hasValidWebcta = true;
 
-                        bool hasValidWebcta = false;
-                        // Проверка на null для price
+                            }
 
-                        if (webcast.price != null && webcast.price.isFree != true && webcast.price.basePrice != null)
-                        {
-                            hasValidWebcta = true;
+                            //if (webcastTr.price != null && webcastTr.price.isFree != true && webcastTr.price.basePrice != null)
+                            //{
+                            //    hasValidWebcta = true;
 
-                        }
+                            //}
 
-                        if (webcastTr.price != null && webcastTr.price.isFree != true && webcastTr.price.basePrice != null)
-                        {
-                            hasValidWebcta = true;
-
-                        }
-
-                        if (!hasValidWebcta)
-                            continue;
+                            if (!hasValidWebcta)
+                                continue;
 
                         // Создание Edition
                         var edition = new Business.Data.Models.Edition
                         {
-                            Guid = Guid.NewGuid(),
-                            CusaCode = p1.id ?? string.Empty,
+                            CusaCodeUA = p1.id ?? string.Empty,
                             Type = "Game",
-                            EditionName = p1.name ?? string.Empty,
+                            EditionName = p1.invariantName ?? string.Empty,
                             EditionType = p1.edition != null ? p1.edition.name ?? string.Empty : string.Empty,
                             Geners = p1.localizedGenres != null ? string.Join("|", p1.localizedGenres.Select(l => l.value)) : string.Empty,
                             Image = GetImageUrl(p1.media),
-                            Features = p1.edition != null ? p1.edition.features != null ? string.Join("|", p1.edition.features) : string.Empty: string.Empty,
+                            Features = p1.edition != null ? p1.edition.features != null ? string.Join("|", p1.edition.features) : string.Empty : string.Empty,
                             Platform = p1.platforms != null ? string.Join("|", p1.platforms) : string.Empty,
-                            CodeRegion = GetCurrencyCode(webcast) + "|" + GetCurrencyCode(webcastTr),
-                            OrderType = webcast.type,
+                            CodeRegion = GetCurrencyCode(webcast[0]) + "|" + GetCurrencyCode(webcastTr),
+                            OrderType = webcast[0].type,
 
                         };
+
+                        if(p1.release != null)
+                        {
+                            edition.Release = Convert.ToDateTime(p1.release);
+                        }
+                            if (webcast.Length > 1)
+                            {
+                                switch (webcast[1].type)
+                                {
+                                    case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                        edition.Subscription = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                        break;
+                                    case "UPSELL_EA_ACCESS_FREE":
+                                        edition.Subscription = "UPSELL_EA_ACCESS_FREE";
+                                        break;
+                                }
+                            }
 
                         var product = new Product()
-                        {
-                            TypeId = edition.Guid,
-                            Type = "Game",
-                            PriceUa = webcast.price.basePriceValue / 100m ?? 0,
-                            DiscountUa = webcast.price.discountedValue / 100m ?? 0,
-                            PriceTr = webcastTr.price.basePriceValue / 100m ?? 0,
-                            DiscountTr = webcastTr.price.discountedValue / 100m ?? 0,
-                            DiscountPercent = webcast.price.discountText ?? string.Empty,
-
-                        };
-
-                        if (webcast.price.endTime != null)
-                        {
-                            if (long.TryParse(webcast.price.endTime.ToString(), out long unixTimestampMs))
                             {
-                                // Преобразуем Unix-время в DateTime
-                                DateTime utcTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestampMs).UtcDateTime;
-                               product.DiscountDate = utcTime.AddHours(3);
+                                Type = "Game",
+                                PriceUa = webcast[0].price.discountedValue / 100m ?? 0,
+                                DiscountPercent = webcast[0].price.discountText ?? string.Empty,
+
+                            };
+                            if(webcastTr !=null)
+                            {
+                                edition.CusaCodeTR = p1.id ?? string.Empty;
+                                product.PriceTr = webcastTr.price.discountedValue / 100m ?? 0;
+
                             }
-                            
+
+                        if (webcast[0].price.endTime != null)
+                            {
+                                if (long.TryParse(webcast[0].price.endTime.ToString(), out long unixTimestampMs))
+                                {
+                                    // Преобразуем Unix-время в DateTime
+                                    DateTime utcTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestampMs).UtcDateTime;
+                                    product.DiscountDate = utcTime.AddHours(3);
+                                }
+
+                            }
+                            edition.Product = product;
+                            editions.Add(edition);
+                  
+
+                        // Добавление Game в список
+                     
                         }
-                        edition.Product = product;
-                        edition.ProductId = product.Guid;
-                        editions.Add(edition);
-                    }
+                        if (editions.Count > 0)
 
-                    // Добавление Game в список
-                    if (editions.Count > 0)
+                            games.Add(new Game
+                            {
+                                ConceptId = conceptId,
+                                Name = name,
+                                Editions = editions,
+                                StarCount = starCount,
+                                LanguagesVoice = voice,
+                                LanguagesInterface = lang
+
+                            });
+                }
+
+
+                Logger.Log("Write JsonFile");
+                    var jsonData = JsonConvert.SerializeObject(games, Newtonsoft.Json.Formatting.Indented);
+
+                    // Если файл новый, начинаем массив
+                    if (!File.Exists(path))
                     {
-                        games.Add(new Game
-                        {
-                            ConceptId = conceptId,
-                            Name = name,
-                            Editions = editions
-                        });
+                        await File.WriteAllTextAsync(path, "[\n" + jsonData.TrimStart('[', '\n').TrimEnd(']', '\n'));
+                        return;
                     }
-                }
 
+                    // Дозапись в существующий файл
+                    var temp = JsonConvert.SerializeObject(games, Newtonsoft.Json.Formatting.Indented)
+                        .TrimStart('[')
+                        .TrimEnd(']');
 
+                    await using var stream = new FileStream(
+                        path,
+                        FileMode.Open,
+                        FileAccess.ReadWrite,
+                        FileShare.None);
 
-                var jsonData = JsonConvert.SerializeObject(games, Newtonsoft.Json.Formatting.Indented);
-
-                // Если файл новый, начинаем массив
-                if (!File.Exists(path))
-                {
-                    await File.WriteAllTextAsync(path, "[\n" + jsonData.TrimStart('[', '\n').TrimEnd(']', '\n'));
-                    return;
-                }
-
-                // Дозапись в существующий файл
-                var temp = JsonConvert.SerializeObject(games, Newtonsoft.Json.Formatting.Indented)
-                    .TrimStart('[')
-                    .TrimEnd(']');
-
-                await using var stream = new FileStream(
-                    path,
-                    FileMode.Open,
-                    FileAccess.ReadWrite,
-                    FileShare.None);
-
-                stream.Seek(-2, SeekOrigin.End); // Перемещаемся перед закрывающей ]
-                stream.Write(Encoding.UTF8.GetBytes(",\n" + temp + "\n]"));
+                    stream.Seek(-2, SeekOrigin.End); // Перемещаемся перед закрывающей ]
+                    stream.Write(Encoding.UTF8.GetBytes(",\n" + temp + "\n]"));
             }
             catch (Exception ex)
             {

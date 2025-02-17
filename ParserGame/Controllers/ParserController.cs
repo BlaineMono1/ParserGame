@@ -27,10 +27,14 @@ namespace ParserGame.Controllers
         {
             try
             {
+                var proxy = ProxyHelper.Proxies[0];
+                HttpClient httpClient = HttpClientFactory.CreateClientUa(proxy);
+
+
                 var urlService = new UrlGeneratorService(BaseUrl.UrlConcept);
                 var urls = urlService.GenerateUrls(startPage, endPage);
 
-                var products = await _adapter.ParseMultiplePagesAsync<ConceptDto>("concept", urls);
+                var products = await _adapter.ParseMultiplePagesAsync<ConceptDto>("concept", urls,httpClient);
            
                 Logger.Log("Stream file");
                 // Генерируем имя файла
@@ -87,8 +91,7 @@ namespace ParserGame.Controllers
                     await _adapter.ParseMultipleJsonAsync<DataGame>("cusacode", requestList, filePathWrite,httpClient, httpClientTr);
 
 
-
-
+                   
                 }
 
                 return Ok(new { Message = "Data parsed and saved successfully." });

@@ -2,13 +2,10 @@
 
 namespace Business.Data.Models
 {
-    public class Product:BaseEntity
+    public class Product
     {
         #region поля
-        /// <summary>
-        /// Id Издания/AddOn/Подписки
-        /// </summary>
-        public Guid TypeId { get; set; }
+       
         /// <summary>
         /// Тип объекта Издания/AddOn/Подписки
         /// </summary>
@@ -17,18 +14,12 @@ namespace Business.Data.Models
         /// Цена в гривнах
         /// </summary>
         public decimal? PriceUa { get; set; }
-        /// <summary>
-        /// Цена по скидке в гривнах
-        /// </summary>
-        public decimal? DiscountUa { get; set; }
+      
         /// <summary>
         /// Цена в лирах
         /// </summary>
         public decimal? PriceTr {  get; set; }
-        /// <summary>
-        ///  Цена по скидке в лирах
-        /// </summary>
-        public decimal? DiscountTr { get; set; }
+      
         /// <summary>
         /// Процент скидки
         /// </summary>
@@ -43,9 +34,7 @@ namespace Business.Data.Models
         #endregion
 
         #region связи
-        public AddOn AddOn { get; set; }
-        public Subscription Subscription { get; set; }
-        public Edition Edition { get; set; }
+  
         #endregion
 
     }

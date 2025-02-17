@@ -7,6 +7,25 @@
             public Rootobject dataUa { get; set; }
 
             public RootobjectTr dataTr { get; set; }
+
+            public string Voice { get; set; }
+            public string SubtitlesLanguages { get; set; }
+            public List<AddOneModel> addonList { get; set; } = new List<AddOneModel>();
+
+            public RootobjectStar dataStar { get; set; }
+        }
+
+        public class AddOneModel
+        {
+            public string CusaCode { get; set; }
+
+            public string Name { get; set; }
+
+            public string Type { get; set; }
+
+            public string Image { get; set; }
+
+            public string Price { get; set; }
         }
         public class RootobjectTr
         {
@@ -17,6 +36,7 @@
         public class Rootobject
         {
             public Data data { get; set; }
+
         }
 
         public class Data
@@ -59,6 +79,9 @@
             public string npTitleId { get; set; }
             public Sku[] skus { get; set; }
             public Webcta[] webctas { get; set; }
+
+            public string release { get; set; }
+
         }
 
         public class Contentrating

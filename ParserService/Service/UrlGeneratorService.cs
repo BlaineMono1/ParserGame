@@ -19,7 +19,12 @@
 
 
         }
+        public string GenerateUrlCusaCode(string cusacode)
+        {
+            return $"{_baseUrl}/{cusacode}";
 
+
+        }
         /// <summary>
         /// Генерирует список URL для диапазона страниц.
         /// </summary>

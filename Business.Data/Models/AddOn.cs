@@ -9,7 +9,10 @@ namespace Business.Data.Models
         /// <summary>
         /// Куса код аддона
         /// </summary>
-        public string CusaCode { get; set; }
+        public string CusaCodeUa { get; set; }
+        public string CusaCodeTr { get; set; }
+
+
         /// <summary>
         /// Наименование Аддона
         /// </summary>
@@ -22,11 +25,7 @@ namespace Business.Data.Models
         /// Url изображения
         /// </summary>
         public string Image {  get; set; }
-        /// <summary>
-        /// Платформа игры (0 - ps4, 1- ps5, 2- ps4/ps5)
-        /// </summary>
-        public int Platform { get; set; }
-      
+   
         #endregion
 
         #region связи

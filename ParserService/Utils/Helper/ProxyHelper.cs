@@ -11,9 +11,9 @@ namespace ParserService.Utils.Helper
        {
             new ProxyModel
             {
-                Url = "http://45.149.131.230:62226",
-                Login = "zkVDTubV",
-                Password = "uz4CEPrJ"
+                Url = "http://45.149.131.230:64028",
+                Login = "EjFihsPK",
+                Password = "5hknxJQT"
             },
             new ProxyModel
             {

@@ -16,11 +16,11 @@ namespace ParserService.Parsers
             {
                 Logger.Log($"parsing {url}");
                 var html = await httpClient.GetStringAsync(url);
-                var htmlDoument = new HtmlDocument();
-                htmlDoument.LoadHtml(html);
+                var htmlDocument = new HtmlDocument();
+                htmlDocument.LoadHtml(html);
                 var gameList = new List<ConceptDto>();
 
-                var gameNodes = htmlDoument.DocumentNode.SelectNodes("//ul[@class='psw-grid-list psw-l-grid']//li");
+                var gameNodes = htmlDocument.DocumentNode.SelectNodes("//ul[@class='psw-grid-list psw-l-grid']//li");
 
                 if (gameNodes != null)
                 {
