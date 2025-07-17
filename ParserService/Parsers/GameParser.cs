@@ -27,7 +27,12 @@ namespace ParserService.Parsers
             throw new NotImplementedException();
         }
 
-        public async  Task<DataGame> ParseAsyncJson(string url,string conceptId, HttpClient httpClientUa, HttpClient httpClientTr)
+        public async Task<DataGame> ParseAsyncJson(
+            string url,
+            string conceptId,
+            HttpClient httpClientUa,
+            HttpClient httpClientTr
+        )
         {
             try
             {
@@ -35,15 +40,15 @@ namespace ParserService.Parsers
                 var requestBody = new
                 {
                     operationName = "conceptRetrieveForUpsellWithCtas",
-                    variables = new { conceptId = conceptId},
+                    variables = new { conceptId = conceptId },
                     extensions = new
                     {
                         persistedQuery = new
                         {
                             version = 1,
-                            sha256Hash = "278822e6c6b9f304e4c788867b3e8a448c67847ac932d09213d5085811be3a18"
-                        }
-                    }
+                            sha256Hash = "278822e6c6b9f304e4c788867b3e8a448c67847ac932d09213d5085811be3a18",
+                        },
+                    },
                 };
 
                 var jsonBody = JsonSerializer.Serialize(requestBody);
@@ -55,26 +60,41 @@ namespace ParserService.Parsers
                 {
                     try
                     {
-
                         var response = httpClientUa.PostAsync(url, content).Result;
                         response.EnsureSuccessStatusCode();
                         var json = await response.Content.ReadAsStringAsync();
 
-                             // Читаем JSON-ответ
-                        var result = JsonSerializer.Deserialize<Rootobject>(json, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true,// Игнорировать регистр свойств
-                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                        });
+                        // Читаем JSON-ответ
+                        var result = JsonSerializer.Deserialize<Rootobject>(
+                            json,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true, // Игнорировать регистр свойств
+                                DefaultIgnoreCondition = System
+                                    .Text
+                                    .Json
+                                    .Serialization
+                                    .JsonIgnoreCondition
+                                    .WhenWritingNull,
+                            }
+                        );
                         var responseTr = httpClientTr.PostAsync(url, content).Result;
                         responseTr.EnsureSuccessStatusCode();
                         var jsonTr = await responseTr.Content.ReadAsStringAsync();
                         // Читаем JSON-ответ
-                        var resultTr = JsonSerializer.Deserialize<RootobjectTr>(jsonTr, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true,// Игнорировать регистр свойств
-                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                        });
+                        var resultTr = JsonSerializer.Deserialize<RootobjectTr>(
+                            jsonTr,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true, // Игнорировать регистр свойств
+                                DefaultIgnoreCondition = System
+                                    .Text
+                                    .Json
+                                    .Serialization
+                                    .JsonIgnoreCondition
+                                    .WhenWritingNull,
+                            }
+                        );
 
                         var requestBodyStar = new
                         {
@@ -85,75 +105,107 @@ namespace ParserService.Parsers
                                 persistedQuery = new
                                 {
                                     version = 1,
-                                    sha256Hash = "8c3dea41cf2f56baf3e0e0bfdf5e7298fa2941ab7488b8d7859bb0200dfb99b9"
-                                }
-                            }
+                                    sha256Hash = "8c3dea41cf2f56baf3e0e0bfdf5e7298fa2941ab7488b8d7859bb0200dfb99b9",
+                                },
+                            },
                         };
 
                         var jsonBodyStar = JsonSerializer.Serialize(requestBodyStar);
-                        var contentStar = new StringContent(jsonBodyStar, Encoding.UTF8, "application/json");
+                        var contentStar = new StringContent(
+                            jsonBodyStar,
+                            Encoding.UTF8,
+                            "application/json"
+                        );
                         var generateUrl = new UrlGeneratorService(UrlStorage.GetStars);
-                        var responseStar = httpClientUa.PostAsync(generateUrl.GenerateRequest(conceptId), contentStar).Result;
+                        var responseStar = httpClientUa
+                            .PostAsync(generateUrl.GenerateRequest(conceptId), contentStar)
+                            .Result;
                         response.EnsureSuccessStatusCode();
                         var jsonStar = await responseStar.Content.ReadAsStringAsync();
 
-                        var resultStar = JsonSerializer.Deserialize<RootobjectStar>(jsonStar, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true,// Игнорировать регистр свойств
-                            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                        });
+                        var resultStar = JsonSerializer.Deserialize<RootobjectStar>(
+                            jsonStar,
+                            new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true, // Игнорировать регистр свойств
+                                DefaultIgnoreCondition = System
+                                    .Text
+                                    .Json
+                                    .Serialization
+                                    .JsonIgnoreCondition
+                                    .WhenWritingNull,
+                            }
+                        );
 
                         if (result.data.conceptRetrieve != null)
                         {
                             foreach (var item in result.data.conceptRetrieve.products)
                             {
                                 item.release = await Release(item.id, httpClientUa) ?? string.Empty;
-
                             }
                         }
-                       
 
-
-                        //Читаем язык и аддоны игры 
+                        //Читаем язык и аддоны игры
                         var generate = new UrlGeneratorService(UrlStorage.UrlConceptUa);
                         var urlLang = generate.GenerateUrlCusaCode(conceptId);
                         var html = await httpClientUa.GetStringAsync(urlLang);
                         var htmlDocument = new HtmlDocument();
                         htmlDocument.LoadHtml(html);
 
-                        var platform = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#platform-value']");
-                        string voice="";
-                        string subtitlesLanguages="";
+                        var platform = htmlDocument.DocumentNode.SelectSingleNode(
+                            "//dd[@data-qa='gameInfo#releaseInformation#platform-value']"
+                        );
+                        string voice = "";
+                        string subtitlesLanguages = "";
                         if (platform != null)
                         {
-                            if(platform.InnerText.Trim() == "PS4, PS5")
+                            if (platform.InnerText.Trim() == "PS4, PS5")
                             {
+                                var voiceNodePs5 = htmlDocument.DocumentNode.SelectSingleNode(
+                                    "//dd[@data-qa='gameInfo#releaseInformation#ps5Voice-value']"
+                                );
+                                var subtitlesNodePs5 = htmlDocument.DocumentNode.SelectSingleNode(
+                                    "//dd[@data-qa='gameInfo#releaseInformation#ps5Subtitles-value']"
+                                );
 
-                                var voiceNodePs5 = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#ps5Voice-value']");
-                                var subtitlesNodePs5 = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#ps5Subtitles-value']");
-
-                                var voiceNodePs4 = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#ps4Voice-value']");
-                                var subtitlesNodePs4 = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#ps4Subtitles-value']");
-                                voice = voiceNodePs5?.InnerText.Trim() ?? string.Empty + "," + voiceNodePs4?.InnerText.Trim() ?? string.Empty;
-                                subtitlesLanguages = subtitlesNodePs5?.InnerText.Trim() ?? string.Empty + "," + subtitlesNodePs4?.InnerText.Trim() ?? string.Empty;
-                                if(voice == null || subtitlesLanguages == null)
+                                var voiceNodePs4 = htmlDocument.DocumentNode.SelectSingleNode(
+                                    "//dd[@data-qa='gameInfo#releaseInformation#ps4Voice-value']"
+                                );
+                                var subtitlesNodePs4 = htmlDocument.DocumentNode.SelectSingleNode(
+                                    "//dd[@data-qa='gameInfo#releaseInformation#ps4Subtitles-value']"
+                                );
+                                voice =
+                                    voiceNodePs5?.InnerText.Trim()
+                                    ?? string.Empty + "," + voiceNodePs4?.InnerText.Trim()
+                                    ?? string.Empty;
+                                subtitlesLanguages =
+                                    subtitlesNodePs5?.InnerText.Trim()
+                                    ?? string.Empty + "," + subtitlesNodePs4?.InnerText.Trim()
+                                    ?? string.Empty;
+                                if (voice == null || subtitlesLanguages == null)
                                 {
-
-                                    var voiceNode = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#voice-value']");
-                                    var subtitlesNode = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#subtitles-value']");
+                                    var voiceNode = htmlDocument.DocumentNode.SelectSingleNode(
+                                        "//dd[@data-qa='gameInfo#releaseInformation#voice-value']"
+                                    );
+                                    var subtitlesNode = htmlDocument.DocumentNode.SelectSingleNode(
+                                        "//dd[@data-qa='gameInfo#releaseInformation#subtitles-value']"
+                                    );
                                     voice = voiceNode?.InnerText.Trim() ?? string.Empty;
-                                    subtitlesLanguages = subtitlesNode?.InnerText.Trim() ?? string.Empty;
+                                    subtitlesLanguages =
+                                        subtitlesNode?.InnerText.Trim() ?? string.Empty;
                                 }
                             }
                             else
                             {
-
-                                var voiceNode = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#voice-value']");
-                                var subtitlesNode = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#subtitles-value']");
+                                var voiceNode = htmlDocument.DocumentNode.SelectSingleNode(
+                                    "//dd[@data-qa='gameInfo#releaseInformation#voice-value']"
+                                );
+                                var subtitlesNode = htmlDocument.DocumentNode.SelectSingleNode(
+                                    "//dd[@data-qa='gameInfo#releaseInformation#subtitles-value']"
+                                );
                                 voice = voiceNode?.InnerText.Trim() ?? string.Empty;
-                                subtitlesLanguages = subtitlesNode?.InnerText.Trim() ?? string.Empty;
-
-
+                                subtitlesLanguages =
+                                    subtitlesNode?.InnerText.Trim() ?? string.Empty;
                             }
                         }
 
@@ -198,7 +250,6 @@ namespace ParserService.Parsers
                         //                        Image = imageNode.InnerText.Trim() ?? string.Empty,
                         //                    });
 
-
                         //                }
                         //                catch (JsonException ex)
                         //                {
@@ -214,7 +265,7 @@ namespace ParserService.Parsers
                         {
                             dataUa = result,
                             dataTr = resultTr,
-                            dataStar = resultStar
+                            dataStar = resultStar,
                         };
 
                         data.Voice = voice;
@@ -222,53 +273,42 @@ namespace ParserService.Parsers
                         //if (addOnList != null)
                         //    data.addonList.AddRange(addOnList);
 
-
                         return data;
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     {
                         Logger.Log($"Attempt {attempt + 1} failed: {ex.Message}");
-                        if (attempt == retryCount - 1) throw; // Если последняя попытка, выбрасываем исключение
+                        if (attempt == retryCount - 1)
+                            throw; // Если последняя попытка, выбрасываем исключение
                         await Task.Delay(delayMilliseconds); // Ждём перед следующей попыткой
                     }
-
                 }
                 return null;
-              
-              
             }
             catch (HttpRequestException ex)
             {
                 Logger.Log($"Error: {ex.Message}");
                 return null;
             }
-
-
-
-
         }
-
 
         public static async Task<string>? Release(string cusacode, HttpClient httpClientUa)
         {
-
             var generate = new UrlGeneratorService(UrlStorage.UrlProductUA);
             var url = generate.GenerateUrlCusaCode(cusacode);
-            //Читаем язык и аддоны игры 
+            //Читаем язык и аддоны игры
             var html = await httpClientUa.GetStringAsync(url);
             var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(html);
 
-
-            var date = htmlDocument.DocumentNode.SelectSingleNode("//dd[@data-qa='gameInfo#releaseInformation#releaseDate-value']");
-            if(date == null)
+            var date = htmlDocument.DocumentNode.SelectSingleNode(
+                "//dd[@data-qa='gameInfo#releaseInformation#releaseDate-value']"
+            );
+            if (date == null)
             {
                 return null;
             }
             return date.InnerText.Trim();
-
         }
-
-
     }
 }

@@ -1,9 +1,10 @@
 ﻿namespace ParserService.Service
 {
-    public  class UrlGeneratorService
+    public class UrlGeneratorService
     {
-        private readonly  string _baseUrl;
-        public  UrlGeneratorService(string baseUrl)
+        private readonly string _baseUrl;
+
+        public UrlGeneratorService(string baseUrl)
         {
             _baseUrl = baseUrl;
         }
@@ -16,22 +17,19 @@
         public string GenerateUrl(int pageNumber)
         {
             return $"{_baseUrl}/{pageNumber}";
-
-
         }
+
         public string GenerateUrlCusaCode(string cusacode)
         {
             return $"{_baseUrl}/{cusacode}";
-
-
         }
+
         /// <summary>
         /// Генерирует список URL для диапазона страниц.
         /// </summary>
         /// <param name="startPage">Начальная страница.</param>
         /// <param name="endPage">Конечная страница.</param>
         /// <returns>Список URL для указанных страниц.</returns>
-
         public IEnumerable<string> GenerateUrls(int startPage, int endPage)
         {
             for (int i = startPage; i <= endPage; i++)
@@ -58,18 +56,14 @@
         /// <param name="startId">Начальный conceptId.</param>
         /// <param name="endId">Конечный conceptId.</param>
         /// <returns>Список URL для указанных conceptId.</returns>
-        public Dictionary<string,string> GenerateRequests(List<string>concepIds)
+        public Dictionary<string, string> GenerateRequests(List<string> concepIds)
         {
-            Dictionary<string,string> results = new Dictionary<string,string>();
-            foreach(var concepId in concepIds)
+            Dictionary<string, string> results = new Dictionary<string, string>();
+            foreach (var concepId in concepIds)
             {
                 results.Add(concepId, GenerateRequest(concepId));
             }
             return results;
-          
         }
-
-       
-
     }
 }

@@ -1,24 +1,20 @@
-﻿namespace ParserService.Models.GameModel
+using System;
+
+namespace ParserService.Models.GameModel;
+
+public class StarProductModel
 {
-    public class RootobjectStar
+    public class RootobjectStarProduct
     {
         public Data data { get; set; }
     }
 
     public class Data
     {
-        public Conceptretrieve conceptRetrieve { get; set; }
+        public Productretrieve productRetrieve { get; set; }
     }
 
-    public class Conceptretrieve
-    {
-        public string __typename { get; set; }
-        public Defaultproduct defaultProduct { get; set; }
-        public string id { get; set; }
-        public Releasedate releaseDate { get; set; }
-    }
-
-    public class Defaultproduct
+    public class Productretrieve
     {
         public string __typename { get; set; }
         public Concept concept { get; set; }
@@ -38,7 +34,7 @@
     public class Starrating
     {
         public string __typename { get; set; }
-        public float averageRating { get; set; }
+        public int averageRating { get; set; }
         public string averageRatingForDisplay { get; set; }
         public Ratingsdistribution[] ratingsDistribution { get; set; }
         public int totalRatingsCount { get; set; }
@@ -78,11 +74,5 @@
     {
         public string __typename { get; set; }
         public bool preOrder { get; set; }
-    }
-
-    public class Releasedate
-    {
-        public string __typename { get; set; }
-        public string type { get; set; }
     }
 }

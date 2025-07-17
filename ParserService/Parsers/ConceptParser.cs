@@ -1,15 +1,14 @@
-﻿using Business.Data.Models;
-using ParserService.Interfaces;
+﻿using System.Text.Json;
+using Business.Data.Models;
 using HtmlAgilityPack;
-using System.Text.Json;
-using ParserService.Utils;
+using ParserService.Interfaces;
 using ParserService.Models;
+using ParserService.Utils;
+
 namespace ParserService.Parsers
 {
     public class ConceptParser : IParser<ConceptDto>
     {
-  
-
         public async Task<IEnumerable<ConceptDto>> ParseAsync(string url, HttpClient httpClient)
         {
             try
@@ -20,7 +19,9 @@ namespace ParserService.Parsers
                 htmlDocument.LoadHtml(html);
                 var gameList = new List<ConceptDto>();
 
-                var gameNodes = htmlDocument.DocumentNode.SelectNodes("//ul[@class='psw-grid-list psw-l-grid']//li");
+                var gameNodes = htmlDocument.DocumentNode.SelectNodes(
+                    "//ul[@class='psw-grid-list psw-l-grid']//li"
+                );
 
                 if (gameNodes != null)
                 {
@@ -29,7 +30,10 @@ namespace ParserService.Parsers
                         var aNode = gameNode.SelectSingleNode(".//a");
                         if (aNode != null)
                         {
-                            var telemetryMeta = aNode.GetAttributeValue("data-telemetry-meta", null);
+                            var telemetryMeta = aNode.GetAttributeValue(
+                                "data-telemetry-meta",
+                                null
+                            );
                             if (!string.IsNullOrEmpty(telemetryMeta))
                             {
                                 try
@@ -42,42 +46,45 @@ namespace ParserService.Parsers
                                     var root = jsonDoc.RootElement;
 
                                     // Извлечение id и name
-                                    var id = root.TryGetProperty("id", out var idProp) ? idProp.GetString() : null;
-                                    var name = root.TryGetProperty("name", out var nameProp) ? nameProp.GetString() : null;
+                                    var id = root.TryGetProperty("id", out var idProp)
+                                        ? idProp.GetString()
+                                        : null;
+                                    var name = root.TryGetProperty("name", out var nameProp)
+                                        ? nameProp.GetString()
+                                        : null;
 
                                     // Добавляем данные в список
-                                    gameList.Add(new ConceptDto
-                                    {
-                                        Id = id,
-                                        //Name = name
-                                    });
+                                    gameList.Add(
+                                        new ConceptDto
+                                        {
+                                            Id = id,
+                                            //Name = name
+                                        }
+                                    );
                                 }
                                 catch (JsonException ex)
                                 {
-                                   Logger.Log($"Error parsing JSON: {ex.Message}");
+                                    Logger.Log($"Error parsing JSON: {ex.Message}");
                                 }
                             }
                         }
-
-
-
                     }
                 }
                 return gameList;
             }
-            catch(HttpRequestException ex)
+            catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 return null;
             }
-        
-
-
-           
         }
 
-
-        public Task<ConceptDto> ParseAsyncJson(string url, string conceptId, HttpClient httpClient, HttpClient httpClientTr)
+        public Task<ConceptDto> ParseAsyncJson(
+            string url,
+            string conceptId,
+            HttpClient httpClient,
+            HttpClient httpClientTr
+        )
         {
             throw new NotImplementedException();
         }

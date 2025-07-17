@@ -27,16 +27,15 @@
 
             public string Price { get; set; }
         }
+
         public class RootobjectTr
         {
             public Data data { get; set; }
         }
 
-
         public class Rootobject
         {
             public Data data { get; set; }
-
         }
 
         public class Data
@@ -81,7 +80,6 @@
             public Webcta[] webctas { get; set; }
 
             public string release { get; set; }
-
         }
 
         public class Contentrating
@@ -193,6 +191,5 @@
             public string type { get; set; }
             public string value { get; set; }
         }
-
     }
 }
