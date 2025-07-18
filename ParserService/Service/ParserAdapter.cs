@@ -270,7 +270,6 @@ namespace ParserService.Service
         public async Task<List<AddonDto>> ParseMultipleAddonAsync<T>(
             string parserKey,
             Dictionary<string, string> urls,
-            string outputPath,
             HttpClient httpClient,
             HttpClient httpClientTr,
             int batchSize = 10

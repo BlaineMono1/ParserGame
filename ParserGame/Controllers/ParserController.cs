@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using Business.Data.Models;
 using DataBaseToAccess;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using ParserService.Models.GameModel;
 using ParserService.Service;
 using ParserService.Utils;
 using ParserService.Utils.Helper;
+using ParserService.Utils.Model;
 using static ParserService.Models.GameModel.ModelAddon;
 using static ParserService.Models.GameModel.ModelGame;
 
@@ -24,7 +26,56 @@ namespace ParserGame.Controllers
             _context = context;
         }
 
-        [HttpGet("concept/{startPage}/{endPage}")]
+        [HttpPost("proxy-set")]
+        public IActionResult ProxySet(ProxyModel proxyModel)
+        {
+            ProxyHelper.Proxies[0].Url = proxyModel.Url;
+            ProxyHelper.Proxies[0].Login = proxyModel.Login;
+            ProxyHelper.Proxies[0].Password = proxyModel.Password;
+            return Ok(ProxyHelper.Proxies[0]);
+        }
+
+        [HttpPost("subscipes")]
+        public async Task<IActionResult> ParseSubscipes(List<string> cusaList)
+        {
+            try
+            {
+                var proxy = ProxyHelper.Proxies[0];
+                HttpClient httpClient = HttpClientFactory.CreateClientUa(proxy);
+
+                HashSet<string> list = new HashSet<string>();
+                if (cusaList == null)
+                    return Ok(new { Mesage = "Пустой спискок" });
+
+                foreach (var item in cusaList)
+                {
+                    list.Add(item);
+                }
+
+                if (list != null)
+                {
+                    //Генерация для UA
+                    var requestService = new UrlGeneratorService(BaseUrl.RequestJsonAddon);
+                    var requestList = requestService.GenerateRequests(list.ToList());
+
+                    HttpClient httpClientTr = HttpClientFactory.CreateClientTr(proxy);
+                    var result = await _adapter.ParseMultipleAddonAsync<DataAddon>(
+                        "addon",
+                        requestList,
+                        httpClient,
+                        httpClientTr
+                    );
+                    return Ok(result);
+                }
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("addon-full")]
         public async Task<IActionResult> ParsePlayStationStore(int startPage, int endPage)
         {
             try
@@ -63,7 +114,6 @@ namespace ParserGame.Controllers
                     var result = await _adapter.ParseMultipleAddonAsync<DataAddon>(
                         "addon",
                         requestList,
-                        filePathWrite,
                         httpClient,
                         httpClientTr
                     );
