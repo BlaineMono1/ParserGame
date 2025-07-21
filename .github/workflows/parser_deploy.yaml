@@ -38,6 +38,7 @@ jobs:
         run: |
           ssh -p "$SSH_PORT" "$SSH_USER"@"$SSH_HOST" << 'ENDSSH'
           cd $GITHUB_REPOSITORY_ID
+          pwd
           docker compose build && docker compose up -d
           cd .. && rm -rf $GITHUB_REPOSITORY_ID
           ENDSSH
