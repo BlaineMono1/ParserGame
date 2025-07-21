@@ -30,12 +30,13 @@ jobs:
         run: |
           scp -P "$SSH_PORT" -r $PWD "$SSH_USER"@"$SSH_HOST":~/$GITHUB_REPOSITORY_ID
 
-      - name: Build and images on host
+      - name: Build and run images on host
         env:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
+          echo $GITHUB_REPOSITORY_ID
           ssh -p "$SSH_PORT" "$SSH_USER"@"$SSH_HOST" << 'ENDSSH'
           cd $GITHUB_REPOSITORY_ID
           pwd
