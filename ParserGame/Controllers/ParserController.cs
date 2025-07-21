@@ -31,7 +31,7 @@ namespace ParserGame.Controllers
             return Ok(ProxyHelper.Proxies[0]);
         }
 
-        [HttpPost("subscipes")]
+        [HttpPost("current-price")]
         public async Task<IActionResult> ParseSubscipes(List<string> cusaList)
         {
             try

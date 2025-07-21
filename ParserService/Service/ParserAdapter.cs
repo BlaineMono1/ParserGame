@@ -611,6 +611,7 @@ namespace ParserService.Service
                     if (webcastTr != null)
                     {
                         product.PriceTr = webcastTr[0].price.discountedValue / 100m ?? 0;
+                        product.DiscountPercentTr = webcastTr[0].price.discountText ?? string.Empty;
                     }
 
                     if (webcast[0].price.endTime != null)
@@ -627,6 +628,7 @@ namespace ParserService.Service
                                 .FromUnixTimeMilliseconds(unixTimestampMs)
                                 .UtcDateTime;
                             product.DiscountDate = utcTime.AddHours(3);
+                            product.DiscountDateTr = utcTime.AddHours(3);
                         }
                     }
                     addon.productDto = product;
