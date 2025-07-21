@@ -1,5 +1,4 @@
 using System.Reflection;
-using DataBaseToAccess;
 using Microsoft.EntityFrameworkCore;
 using ParserService.Interfaces;
 using ParserService.Models;
@@ -9,10 +8,6 @@ using static ParserService.Models.GameModel.ModelAddon;
 using static ParserService.Models.GameModel.ModelGame;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddDbContext<BaseDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DataBaseConnection"))
-);
 
 builder.Services.AddControllers();
 builder

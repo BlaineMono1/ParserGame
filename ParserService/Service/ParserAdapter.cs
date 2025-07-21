@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
-using Business.Data.Models;
 using Newtonsoft.Json;
 using ParserService.Interfaces;
 using ParserService.Models.ResultDTO;
@@ -12,7 +11,6 @@ using ParserService.Utils.Helper;
 using Polly;
 using static ParserService.Models.GameModel.ModelAddon;
 using static ParserService.Models.GameModel.ModelGame;
-using Product = Business.Data.Models.Product;
 
 namespace ParserService.Service
 {

@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using Business.Data.Models;
 using HtmlAgilityPack;
 using ParserService.Interfaces;
 using ParserService.Models;
