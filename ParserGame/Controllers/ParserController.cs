@@ -1,7 +1,5 @@
 ﻿using System.Text;
 using System.Text.Json;
-using Business.Data.Models;
-using DataBaseToAccess;
 using Microsoft.AspNetCore.Mvc;
 using ParserGame.Settings;
 using ParserService.Models;
@@ -18,12 +16,10 @@ namespace ParserGame.Controllers
     public class ParserController : ControllerBase
     {
         private readonly ParserAdapter _adapter;
-        public readonly BaseDbContext _context;
 
-        public ParserController(ParserAdapter adapter, BaseDbContext context)
+        public ParserController(ParserAdapter adapter)
         {
             _adapter = adapter;
-            _context = context;
         }
 
         [HttpPost("proxy-set")]
