@@ -16,6 +16,6 @@ public class EditionDto
     public string? Features { get; set; }
     public string CodeRegion { get; set; }
     public string OrderType { get; set; }
-    public DateTime? Release { get; set; }
+    public string? Release { get; set; }
     public ProductDto Product { get; set; }
 }

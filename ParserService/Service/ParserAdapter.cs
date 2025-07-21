@@ -64,7 +64,7 @@ namespace ParserService.Service
             var processedUrls = new HashSet<string>(); // Для отслеживания уникальных URL
             await Parallel.ForEachAsync(
                 urls,
-                new ParallelOptions { MaxDegreeOfParallelism = 10 },
+                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
                 async (url, cancellationToken) =>
                 {
                     // Проверяем, был ли этот URL уже обработан
@@ -480,7 +480,7 @@ namespace ParserService.Service
 
                         if (p1.release != null)
                         {
-                            edition.Release = Convert.ToDateTime(p1.release);
+                            edition.Release = p1.release;
                         }
                         if (webcast.Length > 1)
                         {
