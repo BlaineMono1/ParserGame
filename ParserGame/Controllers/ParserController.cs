@@ -32,7 +32,7 @@ namespace ParserGame.Controllers
         }
 
         [HttpPost("current-price")]
-        public async Task<IActionResult> ParseSubscipes(List<string> cusaList)
+        public async Task<IActionResult> ParseSubscipes([FromBody] List<string> cusaList)
         {
             try
             {
