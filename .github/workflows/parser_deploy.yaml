@@ -37,7 +37,7 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
         run: |
           ssh -p "$SSH_PORT" "$SSH_USER"@"$SSH_HOST" << 'ENDSSH'
-          cd $GITHUB_REPOSITORY
+          cd $GITHUB_REPOSITORY_ID
           docker compose build && docker compose up -d
           cd .. && rm -rf $GITHUB_REPOSITORY_ID
           ENDSSH
