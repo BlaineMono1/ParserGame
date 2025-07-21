@@ -1,0 +1,17 @@
+---
+services:
+  parser:
+    container_name: parser 
+    image: parser
+    restart: always
+    build:
+      context: .
+      dockerfile: ParserGame/Dockerfile
+    networks:
+      - joystore
+    ports:
+      - "8080:8080"
+
+networks:
+  joystore:
+    external: true
