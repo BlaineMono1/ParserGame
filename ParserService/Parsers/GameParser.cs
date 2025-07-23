@@ -266,7 +266,6 @@ namespace ParserService.Parsers
                             dataTr = resultTr,
                             dataStar = resultStar,
                         };
-
                         data.Voice = voice;
                         data.SubtitlesLanguages = subtitlesLanguages;
                         //if (addOnList != null)

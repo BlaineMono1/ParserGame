@@ -101,16 +101,16 @@ public class ModelAddon
         public string __typename { get; set; }
         public string applicability { get; set; }
         public string basePrice { get; set; }
-        public int basePriceValue { get; set; }
+        public decimal? basePriceValue { get; set; }
         public object campaignId { get; set; }
         public string currencyCode { get; set; }
         public string discountText { get; set; }
         public string discountedPrice { get; set; }
         public decimal? discountedValue { get; set; }
         public object endTime { get; set; }
-        public bool isExclusive { get; set; }
-        public bool isFree { get; set; }
-        public bool isTiedToSubscription { get; set; }
+        public bool? isExclusive { get; set; }
+        public bool? isFree { get; set; }
+        public bool? isTiedToSubscription { get; set; }
         public object[] qualifications { get; set; }
         public string rewardId { get; set; }
         public string[] serviceBranding { get; set; }
