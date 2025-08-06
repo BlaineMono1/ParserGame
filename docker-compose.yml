@@ -3,6 +3,12 @@ services:
   parser:
     container_name: parser 
     image: parser
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
     restart: always
     build:
       context: .
