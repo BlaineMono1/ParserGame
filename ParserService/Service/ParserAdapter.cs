@@ -482,33 +482,36 @@ namespace ParserService.Service
                         }
 
                         #region Турция
-                        if (webcastTr.Length > 0)
+                        if (webcastTr != null)
                         {
-                            if (
-                                webcastTr[0].price != null
-                                && webcastTr[0].price.isFree != true
-                                && webcastTr[0].price.basePriceValue != 0
-                            ) { }
-                            if (webcastTr.Length > 1)
+                            if (webcastTr.Length > 0)
                             {
                                 if (
-                                    webcastTr[1].price != null
-                                    && webcastTr[1].price.isFree != true
-                                    && webcastTr[1].price.basePriceValue != 0
-                                )
+                                    webcastTr[0].price != null
+                                    && webcastTr[0].price.isFree != true
+                                    && webcastTr[0].price.basePriceValue != 0
+                                ) { }
+                                if (webcastTr.Length > 1)
                                 {
-                                    indexWebcastTr = 1;
+                                    if (
+                                        webcastTr[1].price != null
+                                        && webcastTr[1].price.isFree != true
+                                        && webcastTr[1].price.basePriceValue != 0
+                                    )
+                                    {
+                                        indexWebcastTr = 1;
+                                    }
                                 }
-                            }
-                            if (webcastTr.Length > 2)
-                            {
-                                if (
-                                    webcastTr[2].price != null
-                                    && webcastTr[2].price.isFree != true
-                                    && webcastTr[2].price.basePriceValue != 0
-                                )
+                                if (webcastTr.Length > 2)
                                 {
-                                    indexWebcastTr = 2;
+                                    if (
+                                        webcastTr[2].price != null
+                                        && webcastTr[2].price.isFree != true
+                                        && webcastTr[2].price.basePriceValue != 0
+                                    )
+                                    {
+                                        indexWebcastTr = 2;
+                                    }
                                 }
                             }
                         }
@@ -543,9 +546,12 @@ namespace ParserService.Service
                             CodeRegion = GetCurrencyCode(webcast[indexWebcast]) + "|",
                             OrderType = webcast[indexWebcast].type,
                         };
-                        if (webcastTr.Length > 0)
+                        if (webcastTr != null)
                         {
-                            edition.CodeRegion += GetCurrencyCode(webcastTr[indexWebcastTr]);
+                            if (webcastTr.Length > 0)
+                            {
+                                edition.CodeRegion += GetCurrencyCode(webcastTr[indexWebcastTr]);
+                            }
                         }
                         if (p1.release != null)
                         {
@@ -571,15 +577,19 @@ namespace ParserService.Service
                             DiscountPercent =
                                 webcast[indexWebcast].price.discountText ?? string.Empty,
                         };
-                        if (webcastTr.Length > 0)
+                        if (webcastTr != null)
                         {
-                            if (webcastTr[indexWebcastTr] != null)
+                            if (webcastTr.Length > 0)
                             {
-                                edition.CusaCodeTR = p1.id ?? string.Empty;
-                                product.PriceTr =
-                                    webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
-                                product.DiscountPercentTr =
-                                    webcastTr[indexWebcastTr].price.discountText ?? string.Empty;
+                                if (webcastTr[indexWebcastTr] != null)
+                                {
+                                    edition.CusaCodeTR = p1.id ?? string.Empty;
+                                    product.PriceTr =
+                                        webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
+                                    product.DiscountPercentTr =
+                                        webcastTr[indexWebcastTr].price.discountText
+                                        ?? string.Empty;
+                                }
                             }
                         }
                         if (webcast[indexWebcast].price.endTime != null)
