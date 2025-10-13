@@ -280,7 +280,7 @@ namespace ParserService.Service
                 .Or<TaskCanceledException>()
                 .WaitAndRetryAsync(
                     Environment.ProcessorCount,
-                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
+                    retryAttempt => TimeSpan.FromSeconds(Math.Pow(3, retryAttempt))
                 ); // Экспоненциальная задержка
             Logger.Log(Convert.ToString("Кол-во потоков " + Environment.ProcessorCount));
             var resultList = new List<AddonDto>();
@@ -432,12 +432,16 @@ namespace ParserService.Service
                     foreach (var p1 in p.dataUa.data.conceptRetrieve.products)
                     {
                         var webcast = p1.webctas;
+                        var matchedProduct = p.dataTr.data.conceptRetrieve.products.FirstOrDefault(
+                            x => x.invariantName == p1.invariantName
+                        );
 
                         var webcastTr = p
-                            .dataTr.data.conceptRetrieve.products.FirstOrDefault(p =>
-                                p.invariantName == p1.invariantName
+                            .dataTr.data.conceptRetrieve.products.FirstOrDefault(x =>
+                                x.invariantName == p1.invariantName
                             )
-                            .webctas;
+                            ?.webctas;
+
                         // Проверка на null для webctas и edition
                         if (webcast.FirstOrDefault() == null)
                             continue;
@@ -535,13 +539,13 @@ namespace ParserService.Service
                                 p1.platforms != null
                                     ? string.Join("|", p1.platforms)
                                     : string.Empty,
-                            CodeRegion =
-                                GetCurrencyCode(webcast[indexWebcast])
-                                + "|"
-                                + GetCurrencyCode(webcastTr[indexWebcastTr]),
+                            CodeRegion = GetCurrencyCode(webcast[indexWebcast]) + "|",
                             OrderType = webcast[indexWebcast].type,
                         };
-
+                        if (webcastTr != null)
+                        {
+                            edition.CodeRegion += GetCurrencyCode(webcastTr[indexWebcastTr]);
+                        }
                         if (p1.release != null)
                         {
                             edition.Release = p1.release;
@@ -566,13 +570,16 @@ namespace ParserService.Service
                             DiscountPercent =
                                 webcast[indexWebcast].price.discountText ?? string.Empty,
                         };
-                        if (webcastTr[indexWebcastTr] != null)
+                        if (webcastTr != null)
                         {
-                            edition.CusaCodeTR = p1.id ?? string.Empty;
-                            product.PriceTr =
-                                webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
-                            product.DiscountPercentTr =
-                                webcastTr[indexWebcastTr].price.discountText ?? string.Empty;
+                            if (webcastTr[indexWebcastTr] != null)
+                            {
+                                edition.CusaCodeTR = p1.id ?? string.Empty;
+                                product.PriceTr =
+                                    webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
+                                product.DiscountPercentTr =
+                                    webcastTr[indexWebcastTr].price.discountText ?? string.Empty;
+                            }
                         }
                         if (webcast[indexWebcast].price.endTime != null)
                         {
@@ -590,7 +597,6 @@ namespace ParserService.Service
                                 product.DiscountDate = utcTime.AddHours(3);
                             }
                         }
-
                         edition.Product = product;
                         editions.Add(edition);
                     }
