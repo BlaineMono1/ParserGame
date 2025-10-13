@@ -429,6 +429,7 @@ namespace ParserService.Service
                                 .starRating
                                 .totalRatingsCount;
                     }
+
                     foreach (var p1 in p.dataUa.data.conceptRetrieve.products)
                     {
                         var webcast = p1.webctas;
@@ -436,11 +437,7 @@ namespace ParserService.Service
                             x => x.invariantName == p1.invariantName
                         );
 
-                        var webcastTr = p
-                            .dataTr.data.conceptRetrieve.products.FirstOrDefault(x =>
-                                x.invariantName == p1.invariantName
-                            )
-                            ?.webctas;
+                        var webcastTr = matchedProduct?.webctas; // может быть null
 
                         // Проверка на null для webctas и edition
                         if (webcast.FirstOrDefault() == null)
@@ -485,33 +482,37 @@ namespace ParserService.Service
                         }
 
                         #region Турция
-                        if (
-                            webcastTr[0].price != null
-                            && webcastTr[0].price.isFree != true
-                            && webcastTr[0].price.basePriceValue != 0
-                        ) { }
-                        if (webcastTr.Length > 1)
+                        if (webcastTr.Length > 0)
                         {
                             if (
-                                webcastTr[1].price != null
-                                && webcastTr[1].price.isFree != true
-                                && webcastTr[1].price.basePriceValue != 0
-                            )
+                                webcastTr[0].price != null
+                                && webcastTr[0].price.isFree != true
+                                && webcastTr[0].price.basePriceValue != 0
+                            ) { }
+                            if (webcastTr.Length > 1)
                             {
-                                indexWebcastTr = 1;
+                                if (
+                                    webcastTr[1].price != null
+                                    && webcastTr[1].price.isFree != true
+                                    && webcastTr[1].price.basePriceValue != 0
+                                )
+                                {
+                                    indexWebcastTr = 1;
+                                }
+                            }
+                            if (webcastTr.Length > 2)
+                            {
+                                if (
+                                    webcastTr[2].price != null
+                                    && webcastTr[2].price.isFree != true
+                                    && webcastTr[2].price.basePriceValue != 0
+                                )
+                                {
+                                    indexWebcastTr = 2;
+                                }
                             }
                         }
-                        if (webcastTr.Length > 2)
-                        {
-                            if (
-                                webcastTr[2].price != null
-                                && webcastTr[2].price.isFree != true
-                                && webcastTr[2].price.basePriceValue != 0
-                            )
-                            {
-                                indexWebcastTr = 2;
-                            }
-                        }
+
                         #endregion
                         if (!hasValidWebcta)
                             continue;
@@ -542,7 +543,7 @@ namespace ParserService.Service
                             CodeRegion = GetCurrencyCode(webcast[indexWebcast]) + "|",
                             OrderType = webcast[indexWebcast].type,
                         };
-                        if (webcastTr != null)
+                        if (webcastTr.Length > 0)
                         {
                             edition.CodeRegion += GetCurrencyCode(webcastTr[indexWebcastTr]);
                         }
@@ -570,7 +571,7 @@ namespace ParserService.Service
                             DiscountPercent =
                                 webcast[indexWebcast].price.discountText ?? string.Empty,
                         };
-                        if (webcastTr != null)
+                        if (webcastTr.Length > 0)
                         {
                             if (webcastTr[indexWebcastTr] != null)
                             {
