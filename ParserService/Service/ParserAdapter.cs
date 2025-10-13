@@ -380,6 +380,8 @@ namespace ParserService.Service
 
         private List<GameDto> GetDtoGames(List<DataGame> batch)
         {
+            string conceptError = "";
+
             try
             {
                 var games = new List<GameDto>();
@@ -397,6 +399,8 @@ namespace ParserService.Service
                         || p?.dataTr?.data?.conceptRetrieve.products == null
                     )
                         continue;
+
+                    conceptError = p.dataUa.data.conceptRetrieve.id;
                     var conceptId = p.dataUa.data.conceptRetrieve.id ?? string.Empty;
                     var name = p.dataUa.data.conceptRetrieve.name ?? string.Empty;
                     var editions = new List<EditionDto>();
@@ -405,6 +409,8 @@ namespace ParserService.Service
                     int starCount = default;
                     if (
                         p.dataStar != null
+                        && p.dataStar.data != null // ← Добавлено!
+                        && p.dataStar.data.conceptRetrieve != null
                         && p.dataStar.data.conceptRetrieve.defaultProduct != null
                     )
                     {
@@ -428,25 +434,81 @@ namespace ParserService.Service
                         var webcast = p1.webctas;
 
                         var webcastTr = p
-                            .dataTr.data.conceptRetrieve.products.Where(p => p.id == p1.id)
-                            .Select(p => p.webctas.FirstOrDefault())
-                            .FirstOrDefault();
+                            .dataTr.data.conceptRetrieve.products.FirstOrDefault(p =>
+                                p.invariantName == p1.invariantName
+                            )
+                            .webctas;
                         // Проверка на null для webctas и edition
                         if (webcast.FirstOrDefault() == null)
                             continue;
 
                         bool hasValidWebcta = false;
                         // Проверка на null для price
+                        int indexWebcast = 0;
+                        int indexWebcastTr = 0;
 
                         if (
                             webcast[0].price != null
                             && webcast[0].price.isFree != true
-                            && webcast[0].price.basePrice != null
+                            && webcast[0].price.basePriceValue != 0
                         )
                         {
                             hasValidWebcta = true;
                         }
+                        if (webcast.Length > 1)
+                        {
+                            if (
+                                webcast[1].price != null
+                                && webcast[1].price.isFree != true
+                                && webcast[1].price.basePriceValue != 0
+                            )
+                            {
+                                hasValidWebcta = true;
+                                indexWebcast = 1;
+                            }
+                        }
+                        if (webcast.Length > 2)
+                        {
+                            if (
+                                webcast[2].price != null
+                                && webcast[2].price.isFree != true
+                                && webcast[2].price.basePriceValue != 0
+                            )
+                            {
+                                hasValidWebcta = true;
+                                indexWebcast = 2;
+                            }
+                        }
 
+                        #region Турция
+                        if (
+                            webcastTr[0].price != null
+                            && webcastTr[0].price.isFree != true
+                            && webcastTr[0].price.basePriceValue != 0
+                        ) { }
+                        if (webcastTr.Length > 1)
+                        {
+                            if (
+                                webcastTr[1].price != null
+                                && webcastTr[1].price.isFree != true
+                                && webcastTr[1].price.basePriceValue != 0
+                            )
+                            {
+                                indexWebcastTr = 1;
+                            }
+                        }
+                        if (webcastTr.Length > 2)
+                        {
+                            if (
+                                webcastTr[2].price != null
+                                && webcastTr[2].price.isFree != true
+                                && webcastTr[2].price.basePriceValue != 0
+                            )
+                            {
+                                indexWebcastTr = 2;
+                            }
+                        }
+                        #endregion
                         if (!hasValidWebcta)
                             continue;
 
@@ -474,17 +536,19 @@ namespace ParserService.Service
                                     ? string.Join("|", p1.platforms)
                                     : string.Empty,
                             CodeRegion =
-                                GetCurrencyCode(webcast[0]) + "|" + GetCurrencyCode(webcastTr),
-                            OrderType = webcast[0].type,
+                                GetCurrencyCode(webcast[indexWebcast])
+                                + "|"
+                                + GetCurrencyCode(webcastTr[indexWebcastTr]),
+                            OrderType = webcast[indexWebcast].type,
                         };
 
                         if (p1.release != null)
                         {
                             edition.Release = p1.release;
                         }
-                        if (webcast.Length > 1)
+                        if (webcast[indexWebcast] != null)
                         {
-                            switch (webcast[1].type)
+                            switch (webcast[indexWebcast].type)
                             {
                                 case "UPSELL_PS_PLUS_GAME_CATALOG":
                                     edition.Subscription = "UPSELL_PS_PLUS_GAME_CATALOG";
@@ -498,20 +562,23 @@ namespace ParserService.Service
                         var product = new ProductDto()
                         {
                             Type = "Игра",
-                            PriceUa = webcast[0].price.discountedValue / 100m ?? 0,
-                            DiscountPercent = webcast[0].price.discountText ?? string.Empty,
+                            PriceUa = webcast[indexWebcast].price.discountedValue / 100m ?? 0,
+                            DiscountPercent =
+                                webcast[indexWebcast].price.discountText ?? string.Empty,
                         };
-                        if (webcastTr != null)
+                        if (webcastTr[indexWebcastTr] != null)
                         {
                             edition.CusaCodeTR = p1.id ?? string.Empty;
-                            product.PriceTr = webcastTr.price.discountedValue / 100m ?? 0;
+                            product.PriceTr =
+                                webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
+                            product.DiscountPercentTr =
+                                webcastTr[indexWebcastTr].price.discountText ?? string.Empty;
                         }
-
-                        if (webcast[0].price.endTime != null)
+                        if (webcast[indexWebcast].price.endTime != null)
                         {
                             if (
                                 long.TryParse(
-                                    webcast[0].price.endTime.ToString(),
+                                    webcast[indexWebcast].price.endTime.ToString(),
                                     out long unixTimestampMs
                                 )
                             )
@@ -523,6 +590,7 @@ namespace ParserService.Service
                                 product.DiscountDate = utcTime.AddHours(3);
                             }
                         }
+
                         edition.Product = product;
                         editions.Add(edition);
                     }
@@ -543,7 +611,7 @@ namespace ParserService.Service
             }
             catch (Exception ex)
             {
-                Logger.Log(ex.Message);
+                Logger.Log($"{ex.Message} - {conceptError}");
                 return null;
             }
         }

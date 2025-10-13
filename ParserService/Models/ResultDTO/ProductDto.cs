@@ -1,5 +1,3 @@
-using System;
-
 namespace ParserService.Models.ResultDTO;
 
 public class ProductDto
