@@ -308,5 +308,17 @@ namespace ParserService.Parsers
             }
             return date.InnerText.Trim();
         }
+
+        public Task<DataGame> ParseProductAsyncJson(
+            string url,
+            string urlTr,
+            string conceptId,
+            string productIdTr,
+            HttpClient httpClient,
+            HttpClient httpClientTr
+        )
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using Newtonsoft.Json;
 using ParserService.Interfaces;
+using ParserService.Models;
 using ParserService.Models.ResultDTO;
 using ParserService.Models.ResultDTO.Addon;
 using ParserService.Utils;
@@ -146,6 +147,51 @@ namespace ParserService.Service
             throw new KeyNotFoundException($"Parser with key '{parserKey}' not found.");
         }
 
+        public async Task<T> ProductParse<T>(
+            string parserKey,
+            string url,
+            string urlTr,
+            string productId,
+            string productIdTr,
+            HttpClient httpClient,
+            HttpClient httpClientTr
+        )
+            where T : class
+        {
+            int retryCount = 3; // Количество повторных попыток
+            int delayMilliseconds = 500; // Задержка между попытками
+            for (int attempt = 0; attempt < retryCount; attempt++)
+            {
+                try
+                {
+                    if (_parsers.ContainsKey(parserKey))
+                    {
+                        //httpClient.Timeout = TimeSpan.FromSeconds(30); // Увеличиваем таймаут
+                        var parser = _parsers[parserKey] as IParser<T>;
+                        if (parser != null)
+                        {
+                            return await parser.ParseProductAsyncJson(
+                                url,
+                                urlTr,
+                                productId,
+                                productIdTr,
+                                httpClient,
+                                httpClientTr
+                            );
+                        }
+                    }
+                }
+                catch (Exception ex) when (ex is SocketException || ex is HttpRequestException)
+                {
+                    Logger.Log($"Attempt {attempt + 1} failed: {ex.Message}");
+                    if (attempt == retryCount - 1)
+                        throw; // Если последняя попытка, выбрасываем исключение
+                    await Task.Delay(delayMilliseconds); // Ждём перед следующей попыткой
+                }
+            }
+            throw new KeyNotFoundException($"Parser with key '{parserKey}' not found.");
+        }
+
         /// <summary>
         /// Парсит данные с нескольких страниц.
         /// </summary>
@@ -267,7 +313,7 @@ namespace ParserService.Service
         /// </summary>
         public async Task<List<AddonDto>> ParseMultipleAddonAsync<T>(
             string parserKey,
-            Dictionary<string, string> urls,
+            List<PrtoductIdRequest> requests,
             HttpClient httpClient,
             HttpClient httpClientTr,
             int batchSize = 10
@@ -326,15 +372,15 @@ namespace ParserService.Service
             });
             var tasks = new List<Task>();
             await Parallel.ForEachAsync(
-                urls,
+                requests,
                 new ParallelOptions
                 {
                     MaxDegreeOfParallelism = Environment.ProcessorCount,
                     CancellationToken = CancellationToken.None,
                 },
-                async (url, cancellationToken) =>
+                async (request, cancellationToken) =>
                 {
-                    if (processedUrls.TryAdd(url.Key, 0))
+                    if (processedUrls.TryAdd(request.ProductIdUa, 0))
                     {
                         //var randomDelay = TimeSpan.FromMilliseconds(new Random().Next(500, 2000));
 
@@ -345,10 +391,12 @@ namespace ParserService.Service
                             var proxy = await proxyManager.GetProxyAsync();
                             try
                             {
-                                var result = await ParseJsonAsync<DataAddon>(
+                                var result = await ProductParse<DataAddon>(
                                     parserKey,
-                                    url.Value,
-                                    url.Key,
+                                    request.Url,
+                                    request.UrlTr,
+                                    request.ProductIdUa,
+                                    request.ProductIdTr,
                                     httpClient,
                                     httpClientTr
                                 );
@@ -366,7 +414,7 @@ namespace ParserService.Service
                     }
                     else
                     {
-                        Logger.Log($"Duplicate URL detected: {url.Key}");
+                        Logger.Log($"Duplicate URL detected: {request.ProductIdUa}");
                     }
                 }
             );
@@ -434,7 +482,11 @@ namespace ParserService.Service
                     {
                         var webcast = p1.webctas;
                         var matchedProduct = p.dataTr.data.conceptRetrieve.products.FirstOrDefault(
-                            x => x.invariantName == p1.invariantName
+                            x =>
+                                x.invariantName == p1.invariantName
+                                && x.platforms != null
+                                && p1.platforms != null
+                                && x.platforms.SequenceEqual(p1.platforms)
                         );
 
                         var webcastTr = matchedProduct?.webctas; // может быть null
@@ -447,37 +499,43 @@ namespace ParserService.Service
                         // Проверка на null для price
                         int indexWebcast = 0;
                         int indexWebcastTr = 0;
+                        string? sub = null;
 
-                        if (
-                            webcast[0].price != null
-                            && webcast[0].price.isFree != true
-                            && webcast[0].price.basePriceValue != 0
-                        )
+                        if (webcast.Length > 0)
                         {
-                            hasValidWebcta = true;
-                        }
-                        if (webcast.Length > 1)
-                        {
-                            if (
-                                webcast[1].price != null
-                                && webcast[1].price.isFree != true
-                                && webcast[1].price.basePriceValue != 0
-                            )
+                            for (int i = 0; i < webcast.Length; i++)
                             {
-                                hasValidWebcta = true;
-                                indexWebcast = 1;
-                            }
-                        }
-                        if (webcast.Length > 2)
-                        {
-                            if (
-                                webcast[2].price != null
-                                && webcast[2].price.isFree != true
-                                && webcast[2].price.basePriceValue != 0
-                            )
-                            {
-                                hasValidWebcta = true;
-                                indexWebcast = 2;
+                                var item = webcast[i];
+                                if (
+                                    item.price != null
+                                    && item.price.basePriceValue != 0
+                                    && item.price.basePriceValue != null
+                                )
+                                {
+                                    if (
+                                        item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                        || item.type == "UPSELL_EA_ACCESS_FREE"
+                                    )
+                                    {
+                                        // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                        switch (item.type)
+                                        {
+                                            case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                                sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                                break;
+                                            case "UPSELL_EA_ACCESS_FREE":
+                                                sub = "UPSELL_EA_ACCESS_FREE";
+                                                break;
+                                        }
+                                        // Продолжаем поиск валидного webcta в следующих элементах
+                                        continue;
+                                    }
+
+                                    // Нашли валидный webcta без type → фиксируем и выходим
+                                    hasValidWebcta = true;
+                                    indexWebcast = i;
+                                    break; // больше не нужно искать
+                                }
                             }
                         }
 
@@ -486,31 +544,38 @@ namespace ParserService.Service
                         {
                             if (webcastTr.Length > 0)
                             {
-                                if (
-                                    webcastTr[0].price != null
-                                    && webcastTr[0].price.isFree != true
-                                    && webcastTr[0].price.basePriceValue != 0
-                                ) { }
-                                if (webcastTr.Length > 1)
+                                for (int i = 0; i < webcastTr.Length; i++)
                                 {
+                                    var item = webcastTr[i];
                                     if (
-                                        webcastTr[1].price != null
-                                        && webcastTr[1].price.isFree != true
-                                        && webcastTr[1].price.basePriceValue != 0
+                                        item.price != null
+                                        && item.price.basePriceValue != 0
+                                        && item.price.basePriceValue != null
                                     )
                                     {
-                                        indexWebcastTr = 1;
-                                    }
-                                }
-                                if (webcastTr.Length > 2)
-                                {
-                                    if (
-                                        webcastTr[2].price != null
-                                        && webcastTr[2].price.isFree != true
-                                        && webcastTr[2].price.basePriceValue != 0
-                                    )
-                                    {
-                                        indexWebcastTr = 2;
+                                        if (
+                                            item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                            || item.type == "UPSELL_EA_ACCESS_FREE"
+                                        )
+                                        {
+                                            // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                            switch (item.type)
+                                            {
+                                                case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                                    sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                                    break;
+                                                case "UPSELL_EA_ACCESS_FREE":
+                                                    sub = "UPSELL_EA_ACCESS_FREE";
+                                                    break;
+                                            }
+                                            // Продолжаем поиск валидного webcta в следующих элементах
+                                            continue;
+                                        }
+
+                                        // Нашли валидный webcta без type → фиксируем и выходим
+                                        hasValidWebcta = true;
+                                        indexWebcastTr = i;
+                                        break; // больше не нужно искать
                                     }
                                 }
                             }
@@ -557,19 +622,10 @@ namespace ParserService.Service
                         {
                             edition.Release = p1.release;
                         }
-                        if (webcast[indexWebcast] != null)
+                        if (sub != null)
                         {
-                            switch (webcast[indexWebcast].type)
-                            {
-                                case "UPSELL_PS_PLUS_GAME_CATALOG":
-                                    edition.Subscription = "UPSELL_PS_PLUS_GAME_CATALOG";
-                                    break;
-                                case "UPSELL_EA_ACCESS_FREE":
-                                    edition.Subscription = "UPSELL_EA_ACCESS_FREE";
-                                    break;
-                            }
+                            edition.Subscription = sub;
                         }
-
                         var product = new ProductDto()
                         {
                             Type = "Игра",
@@ -666,19 +722,92 @@ namespace ParserService.Service
 
                     bool hasValidWebcta = false;
                     // Проверка на null для price
-
-                    if (
-                        webcast[0].price != null
-                        && webcast[0].price.isFree != true
-                        && webcast[0].price.basePrice != null
-                    )
+                    int indexWebcast = 0;
+                    int indexWebcastTr = 0;
+                    string? sub = null;
+                    if (webcast.Length > 0)
                     {
-                        hasValidWebcta = true;
+                        for (int i = 0; i < webcast.Length; i++)
+                        {
+                            var item = webcast[i];
+                            if (
+                                item.price != null
+                                && item.price.basePriceValue != 0
+                                && item.price.basePriceValue != null
+                            )
+                            {
+                                if (
+                                    item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                    || item.type == "UPSELL_EA_ACCESS_FREE"
+                                )
+                                {
+                                    // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                    switch (item.type)
+                                    {
+                                        case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                            sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                            break;
+                                        case "UPSELL_EA_ACCESS_FREE":
+                                            sub = "UPSELL_EA_ACCESS_FREE";
+                                            break;
+                                    }
+                                    // Продолжаем поиск валидного webcta в следующих элементах
+                                    continue;
+                                }
+
+                                // Нашли валидный webcta без type → фиксируем и выходим
+                                hasValidWebcta = true;
+                                indexWebcast = i;
+                                break; // больше не нужно искать
+                            }
+                        }
                     }
 
+                    #region Турция
+                    if (webcastTr != null)
+                    {
+                        if (webcastTr.Length > 0)
+                        {
+                            for (int i = 0; i < webcastTr.Length; i++)
+                            {
+                                var item = webcastTr[i];
+                                if (
+                                    item.price != null
+                                    && item.price.basePriceValue != 0
+                                    && item.price.basePriceValue != null
+                                )
+                                {
+                                    if (
+                                        item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                        || item.type == "UPSELL_EA_ACCESS_FREE"
+                                    )
+                                    {
+                                        // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                        switch (item.type)
+                                        {
+                                            case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                                sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                                break;
+                                            case "UPSELL_EA_ACCESS_FREE":
+                                                sub = "UPSELL_EA_ACCESS_FREE";
+                                                break;
+                                        }
+                                        // Продолжаем поиск валидного webcta в следующих элементах
+                                        continue;
+                                    }
+
+                                    // Нашли валидный webcta без type → фиксируем и выходим
+                                    hasValidWebcta = true;
+                                    indexWebcastTr = i;
+                                    break; // больше не нужно искать
+                                }
+                            }
+                        }
+                    }
+
+                    #endregion
                     if (!hasValidWebcta)
                         continue;
-
                     var addon = new AddonDto()
                     {
                         ConceptId = p.dataUa.data.productRetrieve.concept.id,
@@ -686,24 +815,30 @@ namespace ParserService.Service
                         CusaCodeUA = cusaCodeUa,
                         CusaCodeTR = cusaCodeTr,
                     };
+                    if (sub != null)
+                    {
+                        addon.Subscription = sub;
+                    }
 
                     var product = new ProductDto()
                     {
                         Type = "Доп пакет",
-                        PriceUa = webcast[0].price.discountedValue / 100m ?? 0,
-                        DiscountPercent = webcast[0].price.discountText ?? string.Empty,
+                        PriceUa = webcast[indexWebcast].price.discountedValue / 100m ?? 0,
+                        DiscountPercent = webcast[indexWebcast].price.discountText ?? string.Empty,
                     };
                     if (webcastTr != null)
                     {
-                        product.PriceTr = webcastTr[0].price.discountedValue / 100m ?? 0;
-                        product.DiscountPercentTr = webcastTr[0].price.discountText ?? string.Empty;
+                        product.PriceTr =
+                            webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
+                        product.DiscountPercentTr =
+                            webcastTr[indexWebcastTr].price.discountText ?? string.Empty;
                     }
 
-                    if (webcast[0].price.endTime != null)
+                    if (webcast[indexWebcast].price.endTime != null)
                     {
                         if (
                             long.TryParse(
-                                webcast[0].price.endTime.ToString(),
+                                webcast[indexWebcast].price.endTime.ToString(),
                                 out long unixTimestampMs
                             )
                         )
@@ -716,6 +851,7 @@ namespace ParserService.Service
                             product.DiscountDateTr = utcTime.AddHours(3);
                         }
                     }
+
                     addon.productDto = product;
                     addons.Add(addon);
                 }

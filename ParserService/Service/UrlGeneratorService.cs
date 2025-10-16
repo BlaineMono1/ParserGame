@@ -1,4 +1,6 @@
-﻿namespace ParserService.Service
+﻿using ParserService.Models;
+
+namespace ParserService.Service
 {
     public class UrlGeneratorService
     {
@@ -64,6 +66,30 @@
                 results.Add(concepId, GenerateRequest(concepId));
             }
             return results;
+        }
+
+        /// <summary>
+        /// Генерирует список URL для диапазона Product.
+        /// </summary>
+        /// <param name="startId">Начальный conceptId.</param>
+        /// <param name="endId">Конечный conceptId.</param>
+        /// <returns>Список URL для указанных conceptId.</returns>
+        public List<PrtoductIdRequest> GenerateRequests(Dictionary<string, string> productId)
+        {
+            var result = new List<PrtoductIdRequest>();
+            foreach (var item in productId)
+            {
+                result.Add(
+                    new PrtoductIdRequest
+                    {
+                        Url = GenerateRequest(item.Key),
+                        UrlTr = GenerateRequest(item.Value),
+                        ProductIdUa = item.Key,
+                        ProductIdTr = item.Value,
+                    }
+                );
+            }
+            return result;
         }
     }
 }
