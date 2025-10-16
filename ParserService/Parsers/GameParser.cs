@@ -181,7 +181,7 @@ namespace ParserService.Parsers
                                     subtitlesNodePs5?.InnerText.Trim()
                                     ?? string.Empty + "," + subtitlesNodePs4?.InnerText.Trim()
                                     ?? string.Empty;
-                                if (voice == null || subtitlesLanguages == null)
+                                if (voice == "," || subtitlesLanguages == ",")
                                 {
                                     var voiceNode = htmlDocument.DocumentNode.SelectSingleNode(
                                         "//dd[@data-qa='gameInfo#releaseInformation#voice-value']"
