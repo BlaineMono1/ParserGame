@@ -510,6 +510,8 @@ namespace ParserService.Service
                                     item.price != null
                                     && item.price.basePriceValue != 0
                                     && item.price.basePriceValue != null
+                                    && item.type != "UPSELL_PS_PLUS_DISCOUNT"
+                                    && item.type != "UPSELL_EA_ACCESS_DISCOUNT"
                                 )
                                 {
                                     if (
@@ -551,6 +553,8 @@ namespace ParserService.Service
                                         item.price != null
                                         && item.price.basePriceValue != 0
                                         && item.price.basePriceValue != null
+                                        && item.type != "UPSELL_PS_PLUS_DISCOUNT"
+                                        && item.type != "UPSELL_EA_ACCESS_DISCOUNT"
                                     )
                                     {
                                         if (
@@ -734,6 +738,8 @@ namespace ParserService.Service
                                 item.price != null
                                 && item.price.basePriceValue != 0
                                 && item.price.basePriceValue != null
+                                && item.type != "UPSELL_PS_PLUS_DISCOUNT"
+                                && item.type != "UPSELL_EA_ACCESS_DISCOUNT"
                             )
                             {
                                 if (
@@ -775,6 +781,8 @@ namespace ParserService.Service
                                     item.price != null
                                     && item.price.basePriceValue != 0
                                     && item.price.basePriceValue != null
+                                    && item.type != "UPSELL_PS_PLUS_DISCOUNT"
+                                    && item.type != "UPSELL_EA_ACCESS_DISCOUNT"
                                 )
                                 {
                                     if (
