@@ -539,6 +539,28 @@ namespace ParserService.Service
                                     break; // больше не нужно искать
                                 }
                             }
+                                // проверяем все webcast на то есть ли вообще подписка на эту игру
+                            for(int i = 0; i < webcast.Length; i++)
+                            {
+                                var item = webcast[i];
+                            
+                                    if (
+                                        item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                        || item.type == "UPSELL_EA_ACCESS_FREE"
+                                    )
+                                    {
+                                        // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                        switch (item.type)
+                                        {
+                                            case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                                sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                                break;
+                                            case "UPSELL_EA_ACCESS_FREE":
+                                                sub = "UPSELL_EA_ACCESS_FREE";
+                                                break;
+                                        }
+                                    }
+                            }
                         }
 
                         #region Турция
@@ -643,7 +665,10 @@ namespace ParserService.Service
                             {
                                 if (webcastTr[indexWebcastTr] != null)
                                 {
-                                    edition.CusaCodeTR = p1.id ?? string.Empty;
+                                    if(matchedProduct != null)
+                                    {
+                                      edition.CusaCodeTR = matchedProduct.id ?? string.Empty;
+                                    }
                                     product.PriceTr =
                                         webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
                                     product.DiscountPercentTr =
@@ -766,6 +791,29 @@ namespace ParserService.Service
                                 indexWebcast = i;
                                 break; // больше не нужно искать
                             }
+                        }
+                        
+                        // проверяем все webcast на то есть ли вообще подписка на эту игру
+                        for(int i = 0; i < webcast.Length; i++)
+                        {
+                            var item = webcast[i];
+                           
+                                if (
+                                    item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                    || item.type == "UPSELL_EA_ACCESS_FREE"
+                                )
+                                {
+                                    // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                    switch (item.type)
+                                    {
+                                        case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                            sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                            break;
+                                        case "UPSELL_EA_ACCESS_FREE":
+                                            sub = "UPSELL_EA_ACCESS_FREE";
+                                            break;
+                                    }
+                                }
                         }
                     }
 
