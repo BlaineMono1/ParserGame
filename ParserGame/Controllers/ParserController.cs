@@ -161,5 +161,63 @@ namespace ParserGame.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        /// <summary>
+        /// возвращает по предзаказы и недавно выпущенные
+        /// </summary>
+        /// <param name="startPage"></param>
+        /// <param name="endPage"></param>
+        /// <returns></returns>
+        [HttpGet("game-prenow")]
+        public async Task<IActionResult> ParseEntityByPreOrderAndNow(int startPage, int endPage)
+        {
+            try
+            {
+                var proxy = ProxyHelper.Proxies[0];
+                HttpClient httpClient = HttpClientFactory.CreateClientUa(proxy);
+
+                var urlService = new UrlGeneratorService(BaseUrl.UrlConceptPreOrderAndNow);
+                var urls = urlService.GenerateUrlsPreOrderAndNow(startPage, endPage);
+
+                var conceptList = await _adapter.ParseMultiplePagesAsync<ConceptDto>(
+                    "concept",
+                    urls,
+                    httpClient
+                );
+
+                HashSet<string> list = new HashSet<string>();
+                var c = conceptList.Select(c => c.Id).ToList();
+                foreach (string item in c)
+                {
+                    list.Add(item);
+                }
+
+                if (conceptList != null)
+                {
+                    //Генерация для UA
+                    var requestService = new UrlGeneratorService(BaseUrl.RequestJson);
+                    var requestList = requestService.GenerateRequests(list.ToList());
+                    // var fileName = "cusacode.json";
+                    // var filePathWrite = Path.Combine(
+                    //     Directory.GetCurrentDirectory(),
+                    //     "Output",
+                    //     fileName
+                    // );
+                    HttpClient httpClientTr = HttpClientFactory.CreateClientTr(proxy);
+                    var result = await _adapter.ParseMultipleJsonAsync<DataGame>(
+                        "cusacode",
+                        requestList,
+                        httpClient,
+                        httpClientTr
+                    );
+                    return Ok(result);
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+        
     }
 }

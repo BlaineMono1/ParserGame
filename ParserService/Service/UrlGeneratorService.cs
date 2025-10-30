@@ -20,7 +20,10 @@ namespace ParserService.Service
         {
             return $"{_baseUrl}/{pageNumber}";
         }
-
+        public string GenerateUrlPreOrderAndNow(int pageNumber)
+        {
+            return _baseUrl.Replace("fake", pageNumber.ToString());
+        }
         public string GenerateUrlCusaCode(string cusacode)
         {
             return $"{_baseUrl}/{cusacode}";
@@ -39,7 +42,19 @@ namespace ParserService.Service
                 yield return GenerateUrl(i);
             }
         }
-
+        /// <summary>
+        /// Генерирует страницы для преордера и новых игр 
+        /// </summary>
+        /// <param name="startPage"></param>
+        /// <param name="endPage"></param>
+        /// <returns></returns>
+        public IEnumerable<string> GenerateUrlsPreOrderAndNow(int startPage, int endPage)
+        {
+            for (int i = startPage; i <= endPage; i++)
+            {
+                yield return GenerateUrlPreOrderAndNow(i);
+            }
+        }
         /// <summary>
         /// Генерирует URL с новым conceptId.
         /// </summary>

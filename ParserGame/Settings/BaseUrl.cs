@@ -4,7 +4,8 @@
     {
         public static readonly string UrlConcept =
             "https://store.playstation.com/ru-ua/pages/browse";
-
+        public static readonly string UrlConceptPreOrderAndNow =
+            "https://store.playstation.com/ru-ua/pages/browse/fake?next_thirty_days=conceptReleaseDate&last_thirty_days=conceptReleaseDate";
         public static readonly string AddOneId =
             "https://store.playstation.com/ru-ua/category/51c9aa7a-c0c7-4b68-90b4-328ad11bf42e";
         public static readonly string RequestJson =
