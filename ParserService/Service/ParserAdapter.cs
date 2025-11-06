@@ -866,7 +866,6 @@ namespace ParserService.Service
                         continue;
                     var addon = new AddonDto()
                     {
-                        ConceptId = p.dataUa.data.productRetrieve.concept.id,
                         Name = name,
                         CusaCodeUA = cusaCodeUa,
                         CusaCodeTR = cusaCodeTr,
