@@ -770,6 +770,7 @@ namespace ParserService.Service
                                 if (
                                     item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
                                     || item.type == "UPSELL_EA_ACCESS_FREE"
+                                    || item.type == "UPSELL_PS_PLUS_FREE"
                                 )
                                 {
                                     // Это upsell — запоминаем тип, но не считаем валидным webcta
@@ -780,6 +781,9 @@ namespace ParserService.Service
                                             break;
                                         case "UPSELL_EA_ACCESS_FREE":
                                             sub = "UPSELL_EA_ACCESS_FREE";
+                                            break;
+                                        case "UPSELL_PS_PLUS_FREE":
+                                            sub = "UPSELL_PS_PLUS_GAME_CATALOG";
                                             break;
                                     }
                                     // Продолжаем поиск валидного webcta в следующих элементах
@@ -801,6 +805,7 @@ namespace ParserService.Service
                             if (
                                 item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
                                 || item.type == "UPSELL_EA_ACCESS_FREE"
+                                || item.type == "UPSELL_PS_PLUS_FREE"
                             )
                             {
                                 // Это upsell — запоминаем тип, но не считаем валидным webcta
@@ -811,6 +816,9 @@ namespace ParserService.Service
                                         break;
                                     case "UPSELL_EA_ACCESS_FREE":
                                         sub = "UPSELL_EA_ACCESS_FREE";
+                                        break;
+                                    case "UPSELL_PS_PLUS_FREE":
+                                        sub = "UPSELL_PS_PLUS_GAME_CATALOG";
                                         break;
                                 }
                             }
@@ -836,6 +844,7 @@ namespace ParserService.Service
                                     if (
                                         item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
                                         || item.type == "UPSELL_EA_ACCESS_FREE"
+                                        || item.type == "UPSELL_PS_PLUS_FREE"
                                     )
                                     {
                                         // Это upsell — запоминаем тип, но не считаем валидным webcta
@@ -846,6 +855,9 @@ namespace ParserService.Service
                                                 break;
                                             case "UPSELL_EA_ACCESS_FREE":
                                                 sub = "UPSELL_EA_ACCESS_FREE";
+                                                break;
+                                            case "UPSELL_PS_PLUS_FREE":
+                                                sub = "UPSELL_PS_PLUS_GAME_CATALOG";
                                                 break;
                                         }
                                         // Продолжаем поиск валидного webcta в следующих элементах
