@@ -539,27 +539,27 @@ namespace ParserService.Service
                                     break; // больше не нужно искать
                                 }
                             }
-                                // проверяем все webcast на то есть ли вообще подписка на эту игру
-                            for(int i = 0; i < webcast.Length; i++)
+                            // проверяем все webcast на то есть ли вообще подписка на эту игру
+                            for (int i = 0; i < webcast.Length; i++)
                             {
                                 var item = webcast[i];
-                            
-                                    if (
-                                        item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
-                                        || item.type == "UPSELL_EA_ACCESS_FREE"
-                                    )
+
+                                if (
+                                    item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                    || item.type == "UPSELL_EA_ACCESS_FREE"
+                                )
+                                {
+                                    // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                    switch (item.type)
                                     {
-                                        // Это upsell — запоминаем тип, но не считаем валидным webcta
-                                        switch (item.type)
-                                        {
-                                            case "UPSELL_PS_PLUS_GAME_CATALOG":
-                                                sub = "UPSELL_PS_PLUS_GAME_CATALOG";
-                                                break;
-                                            case "UPSELL_EA_ACCESS_FREE":
-                                                sub = "UPSELL_EA_ACCESS_FREE";
-                                                break;
-                                        }
+                                        case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                            sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                            break;
+                                        case "UPSELL_EA_ACCESS_FREE":
+                                            sub = "UPSELL_EA_ACCESS_FREE";
+                                            break;
                                     }
+                                }
                             }
                         }
 
@@ -665,9 +665,9 @@ namespace ParserService.Service
                             {
                                 if (webcastTr[indexWebcastTr] != null)
                                 {
-                                    if(matchedProduct != null)
+                                    if (matchedProduct != null)
                                     {
-                                      edition.CusaCodeTR = matchedProduct.id ?? string.Empty;
+                                        edition.CusaCodeTR = matchedProduct.id ?? string.Empty;
                                     }
                                     product.PriceTr =
                                         webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
@@ -792,28 +792,28 @@ namespace ParserService.Service
                                 break; // больше не нужно искать
                             }
                         }
-                        
+
                         // проверяем все webcast на то есть ли вообще подписка на эту игру
-                        for(int i = 0; i < webcast.Length; i++)
+                        for (int i = 0; i < webcast.Length; i++)
                         {
                             var item = webcast[i];
-                           
-                                if (
-                                    item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
-                                    || item.type == "UPSELL_EA_ACCESS_FREE"
-                                )
+
+                            if (
+                                item.type == "UPSELL_PS_PLUS_GAME_CATALOG"
+                                || item.type == "UPSELL_EA_ACCESS_FREE"
+                            )
+                            {
+                                // Это upsell — запоминаем тип, но не считаем валидным webcta
+                                switch (item.type)
                                 {
-                                    // Это upsell — запоминаем тип, но не считаем валидным webcta
-                                    switch (item.type)
-                                    {
-                                        case "UPSELL_PS_PLUS_GAME_CATALOG":
-                                            sub = "UPSELL_PS_PLUS_GAME_CATALOG";
-                                            break;
-                                        case "UPSELL_EA_ACCESS_FREE":
-                                            sub = "UPSELL_EA_ACCESS_FREE";
-                                            break;
-                                    }
+                                    case "UPSELL_PS_PLUS_GAME_CATALOG":
+                                        sub = "UPSELL_PS_PLUS_GAME_CATALOG";
+                                        break;
+                                    case "UPSELL_EA_ACCESS_FREE":
+                                        sub = "UPSELL_EA_ACCESS_FREE";
+                                        break;
                                 }
+                            }
                         }
                     }
 
@@ -915,7 +915,7 @@ namespace ParserService.Service
             }
             catch (Exception ex)
             {
-                Logger.Log(ex.Message);
+                Logger.Log($"Ошибка определенно тут {ex.Message}");
                 return null;
             }
         }
