@@ -882,7 +882,7 @@ namespace ParserService.Service
                         PriceUa = webcast[indexWebcast].price.discountedValue / 100m ?? 0,
                         DiscountPercent = webcast[indexWebcast].price.discountText ?? string.Empty,
                     };
-                    if (webcastTr != null)
+                    if (webcastTr != null && webcastTr.Length > 0)
                     {
                         product.PriceTr =
                             webcastTr[indexWebcastTr].price.discountedValue / 100m ?? 0;
